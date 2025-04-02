@@ -1,12 +1,10 @@
 import { createContext, useContext, useState, useEffect } from "react";
-import { onAuthStateChanged, signOut } from "firebase/auth";
+import { onAuthStateChanged } from "firebase/auth";
 import { auth, db } from "../pages/firebaseConfig";
 import { doc, getDoc } from "firebase/firestore";
 
-// Crear el contexto de autenticación
 const AuthContext = createContext();
 
-// Hook personalizado para usar el contexto
 export const useAuth = () => useContext(AuthContext);
 
 export const AuthProvider = ({ children }) => {
@@ -18,9 +16,14 @@ export const AuthProvider = ({ children }) => {
       if (currentUser) {
         const userDoc = await getDoc(doc(db, "users", currentUser.uid));
         if (userDoc.exists()) {
-          setUser({ uid: currentUser.uid, email: currentUser.email, role: userDoc.data().role });
+          const userData = userDoc.data();
+          setUser({ 
+            uid: currentUser.uid, 
+            email: currentUser.email, 
+            role: userData.rol || "user" // Asigna un valor por defecto si rol no existe
+          });
         } else {
-          setUser({ uid: currentUser.uid, email: currentUser.email, role: "inquilino" }); // Rol por defecto
+          setUser(null);
         }
       } else {
         setUser(null);
@@ -31,13 +34,8 @@ export const AuthProvider = ({ children }) => {
     return () => unsubscribe();
   }, []);
 
-  const logout = async () => {
-    await signOut(auth);
-    setUser(null);
-  };
-
   return (
-    <AuthContext.Provider value={{ user, loading, logout }}>
+    <AuthContext.Provider value={{ user, loading }}>
       {children}
     </AuthContext.Provider>
   );
