@@ -15,7 +15,7 @@ const useUserRole = () => {
       const userRef = doc(db, "users", user.uid); // Asume que los roles están en "users/{uid}"
       getDoc(userRef).then((docSnap) => {
         if (docSnap.exists()) {
-          setRol(docSnap.data().rol); // Se usa "rol" en vez de "role"
+          setRol(docSnap.data().rol); 
         }
         setLoading(false);
       });

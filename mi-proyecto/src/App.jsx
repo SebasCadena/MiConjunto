@@ -7,7 +7,9 @@ import ProtectedRoute from "./components/ProtectedRoute";
 const App = () => {
   return (
     <Routes>
+
       <Route path="/" element={<Login />} />
+
       <Route
         path="/dueño"
         element={
@@ -16,6 +18,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+
       <Route
         path="/inquilino"
         element={
@@ -24,6 +27,7 @@ const App = () => {
           </ProtectedRoute>
         }
       />
+      
     </Routes>
   );
 };
