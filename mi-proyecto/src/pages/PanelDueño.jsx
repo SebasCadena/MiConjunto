@@ -181,7 +181,9 @@ const PanelDueño = () => {
   };
 
   return (
+    
     <div className="flex h-screen">
+      
       {/* Barra lateral */}
       <aside className="w-1/4 bg-teal-100 p-4 flex flex-col items-center">
         <div className="mb-6 text-center">
