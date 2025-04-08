@@ -1,3 +1,4 @@
+import React from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "../context/AuthContext";
 
@@ -19,12 +20,14 @@ const ProtectedRoute = ({ children, requiredRole }) => {
 
   // Si el rol del usuario no coincide con el requerido, redirigir al login
   if (requiredRole && (!user.role || user.role !== requiredRole)) {
-    console.error(`ProtectedRoute: User role (${user?.role}) does not match required role (${requiredRole}). Redirecting to login.`);
+    console.error(
+      `ProtectedRoute: User role (${user?.role}) does not match required role (${requiredRole}). Redirecting to login.`
+    );
     return <Navigate to="/" replace />;
   }
 
-  // Renderizar el componente hijo si todo está bien
-  return <>{children}</>;
+  // Pasar el userId como prop al componente hijo
+  return React.cloneElement(children, { userId: user.uid });
 };
 
 export default ProtectedRoute;
