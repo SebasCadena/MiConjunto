@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Inicializar Firebase Admin SDK
-const serviceAccount = require(path.join(__dirname, "miconjunto-166a5-firebase-adminsdk-fbsvc-0c4edf1dbd.json"));
+const serviceAccount = require(path.join(__dirname, "miconjunto-166a5-firebase-adminsdk-fbsvc-599c11bb0d.json"));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
