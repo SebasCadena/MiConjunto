@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from "react";
-import { collection, setDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import { collection, setDoc, getDocs, updateDoc, deleteDoc, doc, Timestamp } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const EstadoPagos = () => {
   const [zonasComunes, setZonasComunes] = useState([]); // Lista de zonas comunes
+  const [conjuntos, setConjuntos] = useState([]); // Lista de conjuntos
   const [nuevaZona, setNuevaZona] = useState({
     nombre_zona: "",
     horario_inicio: "",
@@ -14,18 +15,31 @@ const EstadoPagos = () => {
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoZona, setEditandoZona] = useState(null);
 
-  // Obtener zonas comunes desde Firestore al montar el componente
+  // Obtener zonas comunes y conjuntos desde Firestore al montar el componente
   useEffect(() => {
-    const obtenerZonasComunes = async () => {
-      const querySnapshot = await getDocs(collection(db, "zonas"));
-      const zonasFirestore = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setZonasComunes(zonasFirestore);
+    const obtenerDatos = async () => {
+      try {
+        // Obtener zonas comunes
+        const zonasSnapshot = await getDocs(collection(db, "zonas"));
+        const zonasFirestore = zonasSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setZonasComunes(zonasFirestore);
+
+        // Obtener conjuntos
+        const conjuntosSnapshot = await getDocs(collection(db, "conjuntos"));
+        const conjuntosFirestore = conjuntosSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setConjuntos(conjuntosFirestore);
+      } catch (error) {
+        console.error("Error al obtener los datos:", error);
+      }
     };
 
-    obtenerZonasComunes();
+    obtenerDatos();
   }, []);
 
   // Función para añadir o editar una zona común
@@ -42,21 +56,27 @@ const EstadoPagos = () => {
     }
 
     try {
+      const zonaData = {
+        ...nuevaZona,
+        horario_inicio: Timestamp.fromDate(new Date(nuevaZona.horario_inicio)),
+        horario_final: Timestamp.fromDate(new Date(nuevaZona.horario_final)),
+      };
+
       if (editandoZona) {
         // Editar zona existente
         const zonaRef = doc(db, "zonas", editandoZona.id);
-        await updateDoc(zonaRef, nuevaZona);
+        await updateDoc(zonaRef, zonaData);
         setZonasComunes(
           zonasComunes.map((zona) =>
-            zona.id === editandoZona.id ? { ...nuevaZona, id: zona.id } : zona
+            zona.id === editandoZona.id ? { ...zonaData, id: zona.id } : zona
           )
         );
         setEditandoZona(null);
       } else {
         // Añadir nueva zona con un ID generado automáticamente
         const zonaRef = doc(collection(db, "zonas"));
-        await setDoc(zonaRef, nuevaZona);
-        setZonasComunes([...zonasComunes, { ...nuevaZona, id: zonaRef.id }]);
+        await setDoc(zonaRef, zonaData);
+        setZonasComunes([...zonasComunes, { ...zonaData, id: zonaRef.id }]);
       }
 
       // Reiniciar el formulario
@@ -119,24 +139,34 @@ const EstadoPagos = () => {
               }
               className="border p-2 rounded"
             />
-            <input
-              type="text"
-              placeholder="Horario Inicio (Ej: 8:00 AM)"
-              value={nuevaZona.horario_inicio}
-              onChange={(e) =>
-                setNuevaZona({ ...nuevaZona, horario_inicio: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Horario Final (Ej: 8:00 PM)"
-              value={nuevaZona.horario_final}
-              onChange={(e) =>
-                setNuevaZona({ ...nuevaZona, horario_final: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
+            <div>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Fecha y Hora de Inicio
+              </label>
+              <input
+                type="datetime-local"
+                placeholder="Horario Inicio"
+                value={nuevaZona.horario_inicio}
+                onChange={(e) =>
+                  setNuevaZona({ ...nuevaZona, horario_inicio: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+            </div>
+            <div>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Fecha y Hora de Fin
+              </label>
+              <input
+                type="datetime-local"
+                placeholder="Horario Final"
+                value={nuevaZona.horario_final}
+                onChange={(e) =>
+                  setNuevaZona({ ...nuevaZona, horario_final: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              />
+            </div>
             <input
               type="number"
               placeholder="Capacidad"
@@ -146,15 +176,25 @@ const EstadoPagos = () => {
               }
               className="border p-2 rounded"
             />
-            <input
-              type="text"
-              placeholder="Conjunto"
-              value={nuevaZona.conjunto}
-              onChange={(e) =>
-                setNuevaZona({ ...nuevaZona, conjunto: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
+            <div>
+              <label className="block text-gray-700 font-semibold mb-1">
+                Conjunto
+              </label>
+              <select
+                value={nuevaZona.conjunto}
+                onChange={(e) =>
+                  setNuevaZona({ ...nuevaZona, conjunto: e.target.value })
+                }
+                className="border p-2 rounded w-full"
+              >
+                <option value="">Selecciona un conjunto</option>
+                {conjuntos.map((conjunto) => (
+                  <option key={conjunto.id} value={conjunto.nombre_conjunto}>
+                    {conjunto.nombre_conjunto}
+                  </option>
+                ))}
+              </select>
+            </div>
             <div className="flex justify-end space-x-4">
               <button
                 onClick={() => setMostrarFormulario(false)}
@@ -191,18 +231,12 @@ const EstadoPagos = () => {
                     <p className="font-bold text-lg">{zona.nombre_zona}</p>
                     <p className="text-gray-600 text-sm">
                       Horario:{" "}
-                      {zona.horario_inicio?.seconds
-                        ? new Date(zona.horario_inicio.seconds * 1000).toLocaleTimeString("es-ES", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                      {zona.horario_inicio?.toDate
+                        ? zona.horario_inicio.toDate().toLocaleString()
                         : zona.horario_inicio}{" "}
                       -{" "}
-                      {zona.horario_final?.seconds
-                        ? new Date(zona.horario_final.seconds * 1000).toLocaleTimeString("es-ES", {
-                            hour: "2-digit",
-                            minute: "2-digit",
-                          })
+                      {zona.horario_final?.toDate
+                        ? zona.horario_final.toDate().toLocaleString()
                         : zona.horario_final}
                     </p>
                     <p className="text-gray-600 text-sm">Capacidad: {zona.capacidad}</p>
@@ -215,7 +249,15 @@ const EstadoPagos = () => {
                     onClick={() => {
                       setMostrarFormulario(true);
                       setEditandoZona(zona);
-                      setNuevaZona(zona);
+                      setNuevaZona({
+                        ...zona,
+                        horario_inicio: zona.horario_inicio?.toDate
+                          ? zona.horario_inicio.toDate().toISOString().slice(0, 16)
+                          : zona.horario_inicio,
+                        horario_final: zona.horario_final?.toDate
+                          ? zona.horario_final.toDate().toISOString().slice(0, 16)
+                          : zona.horario_final,
+                      });
                     }}
                     className="text-blue-500 hover:text-blue-700"
                     title="Editar"
