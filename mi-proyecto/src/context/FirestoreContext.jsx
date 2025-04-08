@@ -1,7 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
 import { collection, getDocs, setDoc, updateDoc, deleteDoc, doc } from "firebase/firestore";
-import { onAuthStateChanged } from "firebase/auth";
+import { onAuthStateChanged, updateProfile, updateEmail } from "firebase/auth";
 import { db, auth } from "../pages/firebaseConfig";
+
 
 const FirestoreContext = createContext();
 
@@ -40,6 +41,30 @@ export const FirestoreProvider = ({ children }) => {
     await deleteDoc(docRef);
   };
 
+  // Nueva función para actualizar Firestore y Firebase Authentication
+  const updateUser = async (uid, data) => {
+    try {
+      // Actualizar Firestore
+      const docRef = doc(db, "users", uid);
+      await updateDoc(docRef, data);
+  
+      // Actualizar Firebase Authentication (si el usuario está autenticado)
+      if (auth.currentUser && auth.currentUser.uid === uid) {
+        if (data.email && auth.currentUser.email !== data.email) {
+          await updateEmail(auth.currentUser, data.email);
+        }
+        if (data.displayName) {
+          await updateProfile(auth.currentUser, { displayName: data.displayName });
+        }
+      }
+  
+      console.log("Usuario actualizado correctamente.");
+    } catch (error) {
+      console.error("Error al actualizar el usuario:", error);
+      throw error;
+    }
+  };
+
   // Cargar datos iniciales
   useEffect(() => {
     const fetchData = async () => {
@@ -66,6 +91,7 @@ export const FirestoreProvider = ({ children }) => {
         addDocument,
         updateDocument,
         deleteDocument,
+        updateUser, // Exponemos la nueva función
       }}
     >
       {children}
