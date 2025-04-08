@@ -214,7 +214,7 @@ const PanelDueño = () => {
               onClick={() => setVistaActiva("estadoPagos")}
               className={`py-2 px-4 rounded ${vistaActiva === "estadoPagos" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
             >
-              Estado de Pagos
+              Zonas Comunes
             </button>
             <button
               onClick={() => setVistaActiva("ingresos")}
