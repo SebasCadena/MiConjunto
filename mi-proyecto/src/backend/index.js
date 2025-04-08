@@ -8,7 +8,7 @@ app.use(cors());
 app.use(express.json());
 
 // Inicializar Firebase Admin SDK
-const serviceAccount = require(path.join(__dirname, "miconjunto-166a5-firebase-adminsdk-fbsvc-59de7a2c0e.json"));
+const serviceAccount = require(path.join(__dirname, "miconjunto-166a5-firebase-adminsdk-fbsvc-c6a2e050ed.json"));
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
@@ -35,11 +35,19 @@ app.get("/obtenerUsuario/:userId", async (req, res) => {
       return res.status(404).send({ error: "Usuario no encontrado." });
     }
 
-    console.log("Usuario encontrado:", userDoc.data());
-    res.status(200).send(userDoc.data());
+    const userData = userDoc.data();
+    console.log("Usuario encontrado:", userData);
+
+    // Verificar si los datos del usuario están completos
+    if (!userData.email || !userData.nombre) {
+      console.error("Datos incompletos para el usuario:", userId);
+      return res.status(400).send({ error: "Datos incompletos del usuario." });
+    }
+
+    res.status(200).send(userData);
   } catch (error) {
     console.error("Error al obtener los datos del usuario:", error);
-    res.status(500).send({ error: "Error al obtener los datos del usuario." });
+    res.status(500).send({ error: "Error interno del servidor." });
   }
 });
 
