@@ -23,21 +23,34 @@ const Apartamentos = () => {
   });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoApartamento, setEditandoApartamento] = useState(null);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false); // Estado para controlar la visibilidad de inactivos
 
   // Obtener apartamentos desde Firestore al montar el componente
   useEffect(() => {
     const obtenerApartamentos = async () => {
-      const q = query(collection(db, "apartamentos"), where("activo", "==", true)); // Consulta para traer solo los activos
-      const querySnapshot = await getDocs(q);
-      const apartamentosFirestore = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setApartamentos(apartamentosFirestore);
+      try {
+        const apartamentosRef = collection(db, "apartamentos");
+        let q = query(apartamentosRef);
+        if (!mostrarInactivos) {
+          q = query(q, where("activo", "==", true));
+        } else {
+          q = query(q, where("activo", "==", false));
+        }
+        const querySnapshot = await getDocs(q);
+        const apartamentosFirestore = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setApartamentos(apartamentosFirestore);
+      } catch (error) {
+        console.error("Error al obtener apartamentos:", error);
+      }
     };
 
     obtenerApartamentos();
-  }, []);
+  }, [mostrarInactivos]);
+
+  const toggleInactivos = () => setMostrarInactivos(!mostrarInactivos);
 
   // Función para añadir o editar un apartamento
   const añadirApartamento = async () => {
@@ -78,7 +91,7 @@ const Apartamentos = () => {
         valor: "",
         ocupacion: false,
         conjunto: 1,
-        activo: true,
+        activo: true, // Asegurar que el campo activo se reinicie correctamente
       });
       setMostrarFormulario(false);
     } catch (error) {
@@ -93,10 +106,11 @@ const Apartamentos = () => {
       const apartamentoRef = doc(db, "apartamentos", codigo);
       await updateDoc(apartamentoRef, { activo: false });
       // Actualizar el estado de apartamentos para reflejar el cambio
-      setApartamentos(
-        apartamentos.map((apto) =>
-          apto.codigo === codigo ? { ...apto, activo: false } : apto
-        )
+      setApartamentos((prevApartamentos) =>
+        prevApartamentos.map((apto) =>
+          apto.codigo === codigo ? { ...apto, activo: false } : apto,
+        ).filter(apto => apto.activo !== mostrarInactivos)
+        
       );
     } catch (error) {
       console.error("Error al \"eliminar\" el apartamento:", error);
@@ -112,6 +126,12 @@ const Apartamentos = () => {
           <span className="text-gray-500 text-lg">({apartamentos.length} registrados)</span>
         </h1>
         <button
+          onClick={toggleInactivos}
+          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        >
+          {mostrarInactivos ? "Mostrar Activos" : "Mostrar Inactivos"}
+        </button>
+        <button
           onClick={() => {
             setMostrarFormulario(true);
             setEditandoApartamento(null); // Asegurarse de que no esté en modo edición
@@ -122,6 +142,12 @@ const Apartamentos = () => {
         </button>
       </header>
 
+      <p className="bg-gray-200 py-2 px-4 rounded-md shadow-sm text-center">
+        {mostrarInactivos
+          ? "Mostrando apartamentos inactivos"
+          : "Mostrando apartamentos activos"}
+      </p>
+
       {/* Lista de apartamentos */}
       <div>
         {apartamentos.length === 0 ? (
@@ -131,7 +157,7 @@ const Apartamentos = () => {
             {apartamentos.map((apto) => (
               <div
                 key={apto.id}
-                className="flex items-center justify-between p-4 bg-gray-200 rounded-lg shadow"
+                className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow"
               >
                 {/* Indicador de estado */}
                 <div className="flex items-center space-x-4">
@@ -141,9 +167,8 @@ const Apartamentos = () => {
                     }`}
                     title={apto.ocupacion ? "Ocupado" : "Disponible"}
                   ></div>
-                  {/* Información del apartamento */}
-                  <div>
-                    <p className="font-bold text-lg">{apto.codigo}</p>
+                  <div>                    
+                    <p className="font-bold text-lg">{apto.codigo} - {apto.activo ? <b>Activo</b> : <b>Inactivo</b>}</p>
                     <p className="text-gray-600 text-sm">{apto.direccion}</p>
                   </div>
                 </div>

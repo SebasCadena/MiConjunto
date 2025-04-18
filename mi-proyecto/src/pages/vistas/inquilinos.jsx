@@ -33,27 +33,28 @@ const Inquilinos = ({
   });
   const [editandoInquilinoState, setEditandoInquilinoState] = useState(null);
   const [mostrarFormularioState, setMostrarFormularioState] = useState(false);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false);
 
   useEffect(() => {
     const obtenerInquilinos = async () => {
       try {
-        const q = query(
-          collection(db, "users"),
-          where("activo", "==", true),
-          where("rol", "==", "inquilino")
-        ); // Agregamos los where
-        const inquilinoSnapshot = await getDocs(q); // modificamos la manera de pedir los datos
-        const inquilinosData = inquilinoSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
+        const inquilinosRef = collection(db, "users");
+        let q = query(inquilinosRef, where("rol", "==", "inquilino"));
+        if (!mostrarInactivos) {
+          q = query(q, where("activo", "==", true));
+        } else {
+          q = query(q, where("activo", "==", false));
+        }
+        const inquilinoSnapshot = await getDocs(q);
+        const inquilinosData = inquilinoSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
         setInquilinos(inquilinosData);
       } catch (error) {
         console.error("Error al obtener inquilinos:", error);
       }
-    };
+    };    
+
     obtenerInquilinos();
-  }, []);
+  }, [mostrarInactivos]);
 
   const añadirInquilinoFunction = async () => {
     if (
@@ -127,7 +128,6 @@ const Inquilinos = ({
         inquilinosLista.map((user) =>
           user.id === idUser ? { ...user, activo: false } : user
         )
-        .filter(user => user.activo) //se filtran los usuarios inactivos para re-renderizar la lista
       );
     } catch (error) {
       console.error("Error al eliminar el inquilino:", error);
@@ -147,7 +147,17 @@ const Inquilinos = ({
         >
           Añadir Inquilino
         </button>
+        <button
+          onClick={() => setMostrarInactivos(!mostrarInactivos)}
+          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        >
+          {mostrarInactivos ? "Mostrar Activos" : "Mostrar Inactivos"}
+        </button>
       </header>
+
+      <p>
+        {mostrarInactivos ? "Mostrando inquilinos inactivos" : "Mostrando inquilinos activos"}
+      </p>
 
       {/* Lista de inquilinos */}
       <div className="bg-teal-50 shadow rounded p-4">
@@ -158,7 +168,10 @@ const Inquilinos = ({
           >
             <div>
               <p className="font-bold">
-                {inquilino.nombre} {inquilino.activo}
+                {inquilino.nombre} (
+                {inquilino.activo === true
+                  ? "Activo"
+                  : "Inactivo"})
               </p>
               <p className="text-gray-600">{inquilino.email}</p>
             </div>
