@@ -9,6 +9,7 @@ import Apartamentos from "./vistas/apartamentos";
 import Contratos from "./vistas/contratos";
 import EstadoPagos from "./vistas/estadoPagos";
 import Ingresos from "./vistas/ingresos";
+import Historial from "./vistas/historial";
 
 
 const PanelDueño = () => {
@@ -222,6 +223,13 @@ const PanelDueño = () => {
             >
               Ingresos
           </button>
+          <button
+              onClick={() => setVistaActiva("historial")}
+              className={`py-2 px-4 rounded ${vistaActiva === "historial" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
+            >
+              Historial
+          </button>
+
           </nav>
         <button
           onClick={cerrarSesion}
@@ -255,6 +263,8 @@ const PanelDueño = () => {
         {vistaActiva === "contratos" && <Contratos />}
         {vistaActiva === "estadoPagos" && <EstadoPagos />}
         {vistaActiva === "ingresos" && <Ingresos />}
+        {vistaActiva === "historial" && <Historial />}
+
 
 
       </main>
