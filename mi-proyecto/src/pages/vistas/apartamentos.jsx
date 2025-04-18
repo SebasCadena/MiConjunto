@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { collection, setDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  setDoc,
+  getDocs,
+  updateDoc,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const Apartamentos = () => {
@@ -9,8 +17,9 @@ const Apartamentos = () => {
     direccion: "",
     descripcion: "",
     valor: "",
-    ocupacion: false, // Por defecto, no está ocupado
-    conjunto: 1, // Campo fijo con valor predeterminado
+    ocupacion: false,
+    conjunto: 1,
+    activo: true, // Campo añadido: activo
   });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoApartamento, setEditandoApartamento] = useState(null);
@@ -18,7 +27,8 @@ const Apartamentos = () => {
   // Obtener apartamentos desde Firestore al montar el componente
   useEffect(() => {
     const obtenerApartamentos = async () => {
-      const querySnapshot = await getDocs(collection(db, "apartamentos"));
+      const q = query(collection(db, "apartamentos"), where("activo", "==", true)); // Consulta para traer solo los activos
+      const querySnapshot = await getDocs(q);
       const apartamentosFirestore = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
@@ -40,7 +50,10 @@ const Apartamentos = () => {
       if (editandoApartamento) {
         // Editar apartamento existente
         const apartamentoRef = doc(db, "apartamentos", editandoApartamento.codigo);
-        await updateDoc(apartamentoRef, nuevoApartamento);
+        await updateDoc(apartamentoRef, {
+            ...nuevoApartamento,
+            activo: editandoApartamento.activo,
+        });
         setApartamentos(
           apartamentos.map((apto) =>
             apto.codigo === editandoApartamento.codigo ? { ...nuevoApartamento, id: apto.codigo } : apto
@@ -48,9 +61,12 @@ const Apartamentos = () => {
         );
         setEditandoApartamento(null);
       } else {
-        // Añadir nuevo apartamento con el código como ID
+        // Añadir nuevo apartamento con el código como ID y activo: true
         const apartamentoRef = doc(db, "apartamentos", nuevoApartamento.codigo);
-        await setDoc(apartamentoRef, nuevoApartamento); // Usa setDoc para establecer el documento con un ID específico
+        await setDoc(apartamentoRef, {
+          ...nuevoApartamento,
+          activo: true, // Añadimos el campo activo: true al crear
+        });
         setApartamentos([...apartamentos, { ...nuevoApartamento, id: nuevoApartamento.codigo }]);
       }
 
@@ -61,7 +77,8 @@ const Apartamentos = () => {
         descripcion: "",
         valor: "",
         ocupacion: false,
-        conjunto: 1, // Campo fijo
+        conjunto: 1,
+        activo: true,
       });
       setMostrarFormulario(false);
     } catch (error) {
@@ -70,14 +87,20 @@ const Apartamentos = () => {
     }
   };
 
-  // Función para eliminar un apartamento
+  // Función para "eliminar" un apartamento (cambiar activo a false)
   const eliminarApartamento = async (codigo) => {
     try {
-      await deleteDoc(doc(db, "apartamentos", codigo));
-      setApartamentos(apartamentos.filter((apto) => apto.codigo !== codigo));
+      const apartamentoRef = doc(db, "apartamentos", codigo);
+      await updateDoc(apartamentoRef, { activo: false });
+      // Actualizar el estado de apartamentos para reflejar el cambio
+      setApartamentos(
+        apartamentos.map((apto) =>
+          apto.codigo === codigo ? { ...apto, activo: false } : apto
+        )
+      );
     } catch (error) {
-      console.error("Error al eliminar el apartamento:", error);
-      alert("Hubo un error al eliminar el apartamento.");
+      console.error("Error al \"eliminar\" el apartamento:", error);
+      alert("Hubo un error al \"eliminar\" el apartamento.");
     }
   };
 
