@@ -3,10 +3,12 @@ import React, { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
 import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 
-    const Historial = () => {
-      const [contratos, setContratos] = useState([]);
-    
-      useEffect(() => {
+const Historial = () => {
+  const [contratos, setContratos] = useState([]);
+  const [filtroApartamento, setFiltroApartamento] = useState("");
+  const [filtroInquilino, setFiltroInquilino] = useState("");
+
+  useEffect(() => {
         const obtenerContratosInactivos = async () => {
           try {
             const q = query(collection(db, "contratos"), where("activo", "==", false));
@@ -52,9 +54,63 @@ import { collection, getDocs, query, where, doc, getDoc } from "firebase/firesto
         obtenerContratosInactivos();
       }, []);
     
+      // Obtener todos los apartamentos y inquilinos para los filtros
+  const apartamentos = [...new Set(contratos.map(c => c.codigo_apartamento))];
+  const inquilinos = [...new Set(contratos.map(c => c.nombre_inquilino))];
+
+  // Filtrar contratos
+  const contratosFiltrados = contratos.filter(contrato => {
+    const filtroApto = !filtroApartamento || contrato.codigo_apartamento === filtroApartamento;
+    const filtroInq = !filtroInquilino || contrato.nombre_inquilino === filtroInquilino;
+    return filtroApto && filtroInq;
+  });
+
       return (
         <div>
           <h2 className="text-2xl font-bold mb-4">Historial de Contratos</h2>
+          <div className="flex space-x-4 mb-4">
+            {/* Filtro por Apartamento */}
+            <div>
+              <label htmlFor="filtro-apartamento" className="block text-sm font-medium text-gray-700">
+                Filtrar por Apartamento
+              </label>
+              <select
+                id="filtro-apartamento"
+                name="filtro-apartamento"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                value={filtroApartamento}
+                onChange={(e) => setFiltroApartamento(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {apartamentos.map(apto => (
+                  <option key={apto} value={apto}>
+                    {apto}
+                  </option>
+                ))}
+              </select>
+            </div>
+
+            {/* Filtro por Inquilino */}
+            <div>
+              <label htmlFor="filtro-inquilino" className="block text-sm font-medium text-gray-700">
+                Filtrar por Inquilino
+              </label>
+              <select
+                id="filtro-inquilino"
+                name="filtro-inquilino"
+                className="mt-1 block w-full pl-3 pr-10 py-2 text-base border-gray-300 focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 sm:text-sm rounded-md"
+                value={filtroInquilino}
+                onChange={(e) => setFiltroInquilino(e.target.value)}
+              >
+                <option value="">Todos</option>
+                {inquilinos.map(inquilino => (
+                  <option key={inquilino} value={inquilino}>
+                    {inquilino}
+                  </option>
+                ))}
+              </select>
+            </div>
+          </div>
           {contratos.length === 0 ? (
             <p>No hay contratos en el historial.</p>
           ) : (
@@ -88,8 +144,7 @@ import { collection, getDocs, query, where, doc, getDoc } from "firebase/firesto
                     </th>
                   </tr>
                 </thead>
-                <tbody className="bg-white divide-y divide-gray-200">
-                  {contratos.map((contrato) => (
+                <tbody className="bg-white divide-y divide-gray-200">{contratosFiltrados.map((contrato) => (
                     <tr key={contrato.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
                         {contrato.codigo_apartamento}
@@ -114,5 +169,5 @@ import { collection, getDocs, query, where, doc, getDoc } from "firebase/firesto
         </div>
       );
     };
-    
-    export default Historial;
+
+export default Historial;
