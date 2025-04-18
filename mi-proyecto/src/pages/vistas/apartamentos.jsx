@@ -104,12 +104,10 @@ const Apartamentos = () => {
   const eliminarApartamento = async (codigo) => {
     try {
       const apartamentoRef = doc(db, "apartamentos", codigo);
-      await updateDoc(apartamentoRef, { activo: false });
+      await updateDoc(apartamentoRef, { activo: mostrarInactivos ? true : false });
       // Actualizar el estado de apartamentos para reflejar el cambio
       setApartamentos((prevApartamentos) =>
-        prevApartamentos.map((apto) =>
-          apto.codigo === codigo ? { ...apto, activo: false } : apto,
-        ).filter(apto => apto.activo !== mostrarInactivos)
+        prevApartamentos.map((apto) => apto.codigo === codigo ? { ...apto, activo: mostrarInactivos ? true : false } : apto)
         
       );
     } catch (error) {
@@ -191,7 +189,7 @@ const Apartamentos = () => {
                     className="text-red-500 hover:text-red-700"
                     title="Eliminar"
                   >
-                    🗑️
+                    {mostrarInactivos ? 'Reactivar 🔄' : 'Eliminar 🗑️'}
                   </button>
                 </div>
               </div>

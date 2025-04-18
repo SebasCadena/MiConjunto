@@ -10,6 +10,7 @@ import {
   where,
   setDoc,
 } from "firebase/firestore";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import { db, auth } from "../firebaseConfig";
 
 const Inquilinos = ({
@@ -65,11 +66,9 @@ const Inquilinos = ({
       alert("Por favor, complete todos los campos");
       return;
     }
-    try {
-      const userCredential = await auth.createUserWithEmailAndPassword(
-        auth,
-        nuevoInquilinoState.email,
-        nuevoInquilinoState.password
+    try {      
+      const userCredential = await createUserWithEmailAndPassword(
+        auth, nuevoInquilinoState.email, nuevoInquilinoState.password
       );
       if (userCredential) {
         //Añadir inquilino a la base de datos
@@ -122,14 +121,14 @@ const Inquilinos = ({
   const eliminarInquilinoFunction = async (idUser, email) => {
     try {
       const userRef = doc(db, "users", idUser);
-      await updateDoc(userRef, { activo: false }); // Cambiamos el estado a false
+      await updateDoc(userRef, { activo: mostrarInactivos ? true : false }); // Cambiamos el estado a false
       // Modificamos la lista de inquilinos, para cambiar el estado de activo del que se esta modificando.
       setInquilinos(
         inquilinosLista.map((user) =>
           user.id === idUser ? { ...user, activo: false } : user
         )
       );
-    } catch (error) {
+    } catch (error) {      
       console.error("Error al eliminar el inquilino:", error);
       alert("Hubo un error al eliminar el inquilino.");
     }
@@ -188,7 +187,7 @@ const Inquilinos = ({
                 }
                 className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600"
               >
-                Eliminar
+                {mostrarInactivos ? "Reactivar" : "Eliminar"}
               </button>
             </div>
           </div>
