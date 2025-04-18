@@ -8,6 +8,8 @@ import {
   doc,
   getDoc,
   Timestamp,
+  query,
+  where,
 } from "firebase/firestore";
 
 export default function Contratos() {
@@ -26,7 +28,9 @@ export default function Contratos() {
     const obtenerDatos = async () => {
       try {
         // Obtener apartamentos
-        const aptoSnapshot = await getDocs(collection(db, "apartamentos"));
+        const aptoSnapshot = await getDocs(
+          query(collection(db, "apartamentos"), where("ocupacion", "==", false), where("activo", "==", true))
+        );
         const apartamentosData = aptoSnapshot.docs
           .map((doc) => ({
             id: doc.id,
@@ -37,7 +41,7 @@ export default function Contratos() {
         setApartamentos(apartamentosData);
 
         // Obtener inquilinos
-        const inquilinoSnapshot = await getDocs(collection(db, "users"));
+        const inquilinoSnapshot = await getDocs(query(collection(db, "users"), where("activo", "==", true)));
         const inquilinosData = inquilinoSnapshot.docs
           .map((doc) => ({
             id: doc.id,
@@ -49,14 +53,14 @@ export default function Contratos() {
 
         // Obtener contratos
         const contratoSnapshot = await getDocs(collection(db, "contratos"));
-        const contratosData = contratoSnapshot.docs.map((doc) => ({
-              id: doc.id,
-              ...doc.data(),
-            }))
-            .filter(contrato => contrato.activo === true);
-          console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
-          setContratos(contratosData);
-        
+        const contratosData = contratoSnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter((contrato) => contrato.activo === true);
+        console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
+        setContratos(contratosData);
       } catch (error) {
         console.error("Error al obtener datos:", error);
       }
@@ -108,14 +112,15 @@ export default function Contratos() {
       const contratoRef = doc(db, "contratos", idContrato);
       const contratoSnap = await getDoc(contratoRef);
       const contratoData = contratoSnap.data();
-      const codigoApartamento = contratoData.codigo_apartamento;
-  
+      const codigoApartamento = contratoData.codigo_apartamento; // Cambio de nombre de variable
+
       // 2. Cambiar el estado del contrato a inactivo
-      await updateDoc(contratoRef, { activo: false }); 
-  
+      await updateDoc(contratoRef, { activo: false });
+
       // 3. Actualizar el estado de ocupación del apartamento a falso
       const apartamentoRef = doc(db, "apartamentos", codigoApartamento);
       await updateDoc(apartamentoRef, { ocupacion: false });
+
 
       // Actualizar el estado local para refrescar la vista
       setContratos(contratos.map(contrato => {
