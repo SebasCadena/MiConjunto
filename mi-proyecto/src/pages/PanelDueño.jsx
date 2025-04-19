@@ -192,10 +192,21 @@ const PanelDueño = () => {
           <p className="font-bold">Perfil: Juan Sebastian Cadena Varela</p>
           <p className="text-gray-600">Dueño</p>
         </div>
-          <nav className="flex flex-col space-y-4 w-full">
-            <button
-              onClick={() => setVistaActiva("inquilinos")}
-              className={`py-2 px-4 rounded ${vistaActiva === "inquilinos" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
+        {/* Mostrar fecha actual */}
+        <div className="mt-4 w-full">
+          <p className="text-center text-gray-700 font-medium">
+            Fecha actual:{" "}
+            {new Date().toLocaleDateString("es-ES", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+        <nav className="flex flex-col space-y-4 w-full">
+          <button
+            onClick={() => setVistaActiva("inquilinos")}className={`py-2 px-4 rounded ${vistaActiva === "inquilinos" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
             >
               Inquilinos
             </button>
