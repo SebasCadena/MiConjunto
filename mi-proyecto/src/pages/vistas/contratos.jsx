@@ -6,7 +6,10 @@ import {
   addDoc,
   updateDoc,
   doc,
+  getDoc,
   Timestamp,
+  query,
+  where,
 } from "firebase/firestore";
 
 export default function Contratos() {
@@ -25,7 +28,9 @@ export default function Contratos() {
     const obtenerDatos = async () => {
       try {
         // Obtener apartamentos
-        const aptoSnapshot = await getDocs(collection(db, "apartamentos"));
+        const aptoSnapshot = await getDocs(
+          query(collection(db, "apartamentos"), where("ocupacion", "==", false), where("activo", "==", true))
+        );
         const apartamentosData = aptoSnapshot.docs
           .map((doc) => ({
             id: doc.id,
@@ -36,7 +41,7 @@ export default function Contratos() {
         setApartamentos(apartamentosData);
 
         // Obtener inquilinos
-        const inquilinoSnapshot = await getDocs(collection(db, "users"));
+        const inquilinoSnapshot = await getDocs(query(collection(db, "users"), where("activo", "==", true)));
         const inquilinosData = inquilinoSnapshot.docs
           .map((doc) => ({
             id: doc.id,
@@ -48,11 +53,13 @@ export default function Contratos() {
 
         // Obtener contratos
         const contratoSnapshot = await getDocs(collection(db, "contratos"));
-        const contratosData = contratoSnapshot.docs.map((doc) => ({
-          id: doc.id,
-          ...doc.data(),
-        }));
-        console.log("Contratos existentes:", contratosData);
+        const contratosData = contratoSnapshot.docs
+          .map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }))
+          .filter((contrato) => contrato.activo === true);
+        console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
         setContratos(contratosData);
       } catch (error) {
         console.error("Error al obtener datos:", error);
@@ -98,6 +105,41 @@ export default function Contratos() {
       alert("Hubo un error al guardar el contrato.");
     }
   };
+
+  const finalizarContratoFunction = async (idContrato) => {
+    try {
+      // 1. Obtener el contrato para acceder al código del apartamento
+      const contratoRef = doc(db, "contratos", idContrato);
+      const contratoSnap = await getDoc(contratoRef);
+      const contratoData = contratoSnap.data();
+      const codigoApartamento = contratoData.codigo_apartamento; // Cambio de nombre de variable
+
+      // 2. Cambiar el estado del contrato a inactivo
+      await updateDoc(contratoRef, { activo: false });
+
+      // 3. Actualizar el estado de ocupación del apartamento a falso
+      const apartamentoRef = doc(db, "apartamentos", codigoApartamento);
+      await updateDoc(apartamentoRef, { ocupacion: false });
+
+
+      // Actualizar el estado local para refrescar la vista
+      setContratos(contratos.map(contrato => {
+        if (contrato.id === idContrato) {
+          return {
+            ...contrato,
+            activo: false,
+          };
+        }
+        return contrato;
+      }).filter(contrato => contrato.activo === true));
+
+      alert("Contrato finalizado exitosamente.");
+    } catch (error) {
+      console.error("Error al finalizar el contrato:", error);
+      alert("Hubo un error al finalizar el contrato.");
+    }
+  };
+
 
   return (
     <div className="p-6 max-w-lg mx-auto bg-cyan-100 rounded-lg">
@@ -196,7 +238,7 @@ export default function Contratos() {
       {/* Lista de contratos */}
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-4">Contratos Existentes</h3>
-        {contratos.length === 0 ? (
+        {contratos.filter(contrato => contrato.activo).length === 0 ? (
           <p className="text-gray-600">No hay contratos registrados.</p>
         ) : (
           <ul className="space-y-4">
@@ -213,6 +255,16 @@ export default function Contratos() {
                     Fechas: {contrato.fecha_inicio.toDate().toLocaleDateString()} -{" "}
                     {contrato.fecha_fin.toDate().toLocaleDateString()}
                   </p>
+                  {/* Aquí podrías mostrar más detalles del contrato si es necesario */}
+                </div>
+                <div className="flex space-x-2">
+                  <button
+                    onClick={() => finalizarContratoFunction(contrato.id)}
+                    className="bg-red-500 text-white px-4 py-2 rounded"
+                  >
+                    Finalizar Contrato
+                  </button>
+                  {/* Otros botones o acciones aquí */}
                 </div>
               </li>
             ))}

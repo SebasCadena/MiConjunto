@@ -9,6 +9,7 @@ import Apartamentos from "./vistas/apartamentos";
 import Contratos from "./vistas/contratos";
 import EstadoPagos from "./vistas/estadoPagos";
 import Ingresos from "./vistas/ingresos";
+import Historial from "./vistas/historial";
 
 
 const PanelDueño = () => {
@@ -191,10 +192,21 @@ const PanelDueño = () => {
           <p className="font-bold">Perfil: Juan Sebastian Cadena Varela</p>
           <p className="text-gray-600">Dueño</p>
         </div>
-          <nav className="flex flex-col space-y-4 w-full">
-            <button
-              onClick={() => setVistaActiva("inquilinos")}
-              className={`py-2 px-4 rounded ${vistaActiva === "inquilinos" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
+        {/* Mostrar fecha actual */}
+        <div className="mt-4 w-full">
+          <p className="text-center text-gray-700 font-medium">
+            Fecha actual:{" "}
+            {new Date().toLocaleDateString("es-ES", {
+              weekday: "long",
+              day: "numeric",
+              month: "long",
+              year: "numeric",
+            })}
+          </p>
+        </div>
+        <nav className="flex flex-col space-y-4 w-full">
+          <button
+            onClick={() => setVistaActiva("inquilinos")}className={`py-2 px-4 rounded ${vistaActiva === "inquilinos" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
             >
               Inquilinos
             </button>
@@ -222,6 +234,13 @@ const PanelDueño = () => {
             >
               Ingresos
           </button>
+          <button
+              onClick={() => setVistaActiva("historial")}
+              className={`py-2 px-4 rounded ${vistaActiva === "historial" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
+            >
+              Historial
+          </button>
+
           </nav>
         <button
           onClick={cerrarSesion}
@@ -255,6 +274,8 @@ const PanelDueño = () => {
         {vistaActiva === "contratos" && <Contratos />}
         {vistaActiva === "estadoPagos" && <EstadoPagos />}
         {vistaActiva === "ingresos" && <Ingresos />}
+        {vistaActiva === "historial" && <Historial />}
+
 
 
       </main>

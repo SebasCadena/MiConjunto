@@ -1,5 +1,13 @@
 import React, { useState, useEffect } from "react";
-import { collection, setDoc, getDocs, updateDoc, deleteDoc, doc } from "firebase/firestore";
+import {
+  collection,
+  setDoc,
+  getDocs,
+  updateDoc,
+  doc,
+  query,
+  where,
+} from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const Apartamentos = () => {
@@ -9,25 +17,40 @@ const Apartamentos = () => {
     direccion: "",
     descripcion: "",
     valor: "",
-    ocupacion: false, // Por defecto, no está ocupado
-    conjunto: 1, // Campo fijo con valor predeterminado
+    ocupacion: false,
+    conjunto: 1,
+    activo: true, // Campo añadido: activo
   });
   const [mostrarFormulario, setMostrarFormulario] = useState(false);
   const [editandoApartamento, setEditandoApartamento] = useState(null);
+  const [mostrarInactivos, setMostrarInactivos] = useState(false); // Estado para controlar la visibilidad de inactivos
 
   // Obtener apartamentos desde Firestore al montar el componente
   useEffect(() => {
     const obtenerApartamentos = async () => {
-      const querySnapshot = await getDocs(collection(db, "apartamentos"));
-      const apartamentosFirestore = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-      }));
-      setApartamentos(apartamentosFirestore);
+      try {
+        const apartamentosRef = collection(db, "apartamentos");
+        let q = query(apartamentosRef);
+        if (!mostrarInactivos) {
+          q = query(q, where("activo", "==", true));
+        } else {
+          q = query(q, where("activo", "==", false));
+        }
+        const querySnapshot = await getDocs(q);
+        const apartamentosFirestore = querySnapshot.docs.map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setApartamentos(apartamentosFirestore);
+      } catch (error) {
+        console.error("Error al obtener apartamentos:", error);
+      }
     };
 
     obtenerApartamentos();
-  }, []);
+  }, [mostrarInactivos]);
+
+  const toggleInactivos = () => setMostrarInactivos(!mostrarInactivos);
 
   // Función para añadir o editar un apartamento
   const añadirApartamento = async () => {
@@ -40,7 +63,10 @@ const Apartamentos = () => {
       if (editandoApartamento) {
         // Editar apartamento existente
         const apartamentoRef = doc(db, "apartamentos", editandoApartamento.codigo);
-        await updateDoc(apartamentoRef, nuevoApartamento);
+        await updateDoc(apartamentoRef, {
+            ...nuevoApartamento,
+            activo: editandoApartamento.activo,
+        });
         setApartamentos(
           apartamentos.map((apto) =>
             apto.codigo === editandoApartamento.codigo ? { ...nuevoApartamento, id: apto.codigo } : apto
@@ -48,9 +74,12 @@ const Apartamentos = () => {
         );
         setEditandoApartamento(null);
       } else {
-        // Añadir nuevo apartamento con el código como ID
+        // Añadir nuevo apartamento con el código como ID y activo: true
         const apartamentoRef = doc(db, "apartamentos", nuevoApartamento.codigo);
-        await setDoc(apartamentoRef, nuevoApartamento); // Usa setDoc para establecer el documento con un ID específico
+        await setDoc(apartamentoRef, {
+          ...nuevoApartamento,
+          activo: true, // Añadimos el campo activo: true al crear
+        });
         setApartamentos([...apartamentos, { ...nuevoApartamento, id: nuevoApartamento.codigo }]);
       }
 
@@ -61,7 +90,8 @@ const Apartamentos = () => {
         descripcion: "",
         valor: "",
         ocupacion: false,
-        conjunto: 1, // Campo fijo
+        conjunto: 1,
+        activo: true, // Asegurar que el campo activo se reinicie correctamente
       });
       setMostrarFormulario(false);
     } catch (error) {
@@ -70,14 +100,19 @@ const Apartamentos = () => {
     }
   };
 
-  // Función para eliminar un apartamento
+  // Función para "eliminar" un apartamento (cambiar activo a false)
   const eliminarApartamento = async (codigo) => {
     try {
-      await deleteDoc(doc(db, "apartamentos", codigo));
-      setApartamentos(apartamentos.filter((apto) => apto.codigo !== codigo));
+      const apartamentoRef = doc(db, "apartamentos", codigo);
+      await updateDoc(apartamentoRef, { activo: mostrarInactivos ? true : false });
+      // Actualizar el estado de apartamentos para reflejar el cambio
+      setApartamentos((prevApartamentos) =>
+        prevApartamentos.map((apto) => apto.codigo === codigo ? { ...apto, activo: mostrarInactivos ? true : false } : apto)
+        
+      );
     } catch (error) {
-      console.error("Error al eliminar el apartamento:", error);
-      alert("Hubo un error al eliminar el apartamento.");
+      console.error("Error al \"eliminar\" el apartamento:", error);
+      alert("Hubo un error al \"eliminar\" el apartamento.");
     }
   };
 
@@ -89,6 +124,12 @@ const Apartamentos = () => {
           <span className="text-gray-500 text-lg">({apartamentos.length} registrados)</span>
         </h1>
         <button
+          onClick={toggleInactivos}
+          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+        >
+          {mostrarInactivos ? "Mostrar Activos" : "Mostrar Inactivos"}
+        </button>
+        <button
           onClick={() => {
             setMostrarFormulario(true);
             setEditandoApartamento(null); // Asegurarse de que no esté en modo edición
@@ -99,6 +140,12 @@ const Apartamentos = () => {
         </button>
       </header>
 
+      <p className="bg-gray-200 py-2 px-4 rounded-md shadow-sm text-center">
+        {mostrarInactivos
+          ? "Mostrando apartamentos inactivos"
+          : "Mostrando apartamentos activos"}
+      </p>
+
       {/* Lista de apartamentos */}
       <div>
         {apartamentos.length === 0 ? (
@@ -108,7 +155,7 @@ const Apartamentos = () => {
             {apartamentos.map((apto) => (
               <div
                 key={apto.id}
-                className="flex items-center justify-between p-4 bg-gray-200 rounded-lg shadow"
+                className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow"
               >
                 {/* Indicador de estado */}
                 <div className="flex items-center space-x-4">
@@ -118,9 +165,8 @@ const Apartamentos = () => {
                     }`}
                     title={apto.ocupacion ? "Ocupado" : "Disponible"}
                   ></div>
-                  {/* Información del apartamento */}
-                  <div>
-                    <p className="font-bold text-lg">{apto.codigo}</p>
+                  <div>                    
+                    <p className="font-bold text-lg">{apto.codigo} - {apto.activo ? <b>Activo</b> : <b>Inactivo</b>}</p>
                     <p className="text-gray-600 text-sm">{apto.direccion}</p>
                   </div>
                 </div>
@@ -143,7 +189,7 @@ const Apartamentos = () => {
                     className="text-red-500 hover:text-red-700"
                     title="Eliminar"
                   >
-                    🗑️
+                    {mostrarInactivos ? 'Reactivar 🔄' : 'Eliminar 🗑️'}
                   </button>
                 </div>
               </div>
