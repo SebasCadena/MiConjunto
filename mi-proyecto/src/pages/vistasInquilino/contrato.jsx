@@ -1,19 +1,17 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
-import { collection, query, where, getDocs } from "firebase/firestore";
+import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
 
 const Contrato = ({ userId }) => {
   const [contrato, setContrato] = useState(null);
   const [apartamento, setApartamento] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [mostrarPagos, setMostrarPagos] = useState(false); // Estado para alternar entre vistas
+  const [mostrarPagos, setMostrarPagos] = useState(false);
+  const [numFactura, setNumFactura] = useState("");
 
   useEffect(() => {
     const cargarDatosContrato = async () => {
       try {
-        console.log("Cargando datos del contrato para el usuario:", userId);
-
-        // Obtener contrato relacionado con el usuario
         const contratoQuery = query(
           collection(db, "contratos"),
           where("id_inquilino", "==", userId)
@@ -24,9 +22,7 @@ const Contrato = ({ userId }) => {
           const contratoDoc = contratoSnapshot.docs[0];
           const contratoData = contratoDoc.data();
           setContrato({ id: contratoDoc.id, ...contratoData });
-          console.log("Contrato encontrado:", { id: contratoDoc.id, ...contratoData });
 
-          // Obtener apartamento relacionado con el contrato
           const apartamentoQuery = query(
             collection(db, "apartamentos"),
             where("codigo", "==", contratoData.codigo_apartamento)
@@ -36,12 +32,7 @@ const Contrato = ({ userId }) => {
           if (!apartamentoSnapshot.empty) {
             const apartamentoData = apartamentoSnapshot.docs[0].data();
             setApartamento(apartamentoData);
-            console.log("Apartamento encontrado:", apartamentoData);
-          } else {
-            console.warn("No se encontró el apartamento con el código:", contratoData.codigo_apartamento);
           }
-        } else {
-          console.warn("No se encontró un contrato para el usuario:", userId);
         }
       } catch (error) {
         console.error("Error al cargar los datos del contrato:", error);
@@ -53,17 +44,31 @@ const Contrato = ({ userId }) => {
     cargarDatosContrato();
   }, [userId]);
 
-  const handlePagarClick = () => {
-    setMostrarPagos(true); // Cambia el estado para mostrar la sección de pagos
-  };
-
-  const handleVolverClick = () => {
-    setMostrarPagos(false); // Cambia el estado para volver a la vista principal
-  };
-
   const copiarTexto = (texto) => {
     navigator.clipboard.writeText(texto);
     alert("Número de cuenta copiado: " + texto);
+  };
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+
+    if (!numFactura) {
+      alert("Por favor, ingresa el número de factura.");
+      return;
+    }
+
+    try {
+      await addDoc(collection(db, "pagos"), {
+        contrato: contrato?.id,
+        num_factura: numFactura,
+      });
+
+      alert("Pago registrado exitosamente.");
+      setNumFactura("");
+    } catch (error) {
+      console.error("Error al registrar el pago:", error);
+      alert("Hubo un error al registrar el pago. Inténtalo de nuevo.");
+    }
   };
 
   if (loading) {
@@ -73,15 +78,12 @@ const Contrato = ({ userId }) => {
   return (
     <div className="p-8">
       {mostrarPagos ? (
-        // Contenido de la sección de pagos
         <div>
           <h2 className="text-2xl font-bold mb-4">Pagos</h2>
           <div className="grid grid-cols-3 gap-4">
-            {/* Tarjeta Bancolombia */}
             <div className="bg-blue-100 p-4 rounded shadow-md flex flex-col justify-between">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
-                  {/* Imagen del banco */}
                   <img
                     src="/path/to/bancolombia-logo.png"
                     alt="Bancolombia"
@@ -99,11 +101,9 @@ const Contrato = ({ userId }) => {
               </button>
             </div>
 
-            {/* Tarjeta Davivienda */}
             <div className="bg-blue-100 p-4 rounded shadow-md flex flex-col justify-between">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
-                  {/* Imagen del banco */}
                   <img
                     src="/path/to/davivienda-logo.png"
                     alt="Davivienda"
@@ -121,11 +121,9 @@ const Contrato = ({ userId }) => {
               </button>
             </div>
 
-            {/* Tarjeta Nequi */}
             <div className="bg-blue-100 p-4 rounded shadow-md flex flex-col justify-between">
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
-                  {/* Imagen del banco */}
                   <img
                     src="/path/to/nequi-logo.png"
                     alt="Nequi"
@@ -143,15 +141,52 @@ const Contrato = ({ userId }) => {
               </button>
             </div>
           </div>
+
+          <div className="mt-8">
+            <h3 className="text-xl font-bold mb-4">Registrar Pago</h3>
+            <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="contrato">
+                  Número de Contrato
+                </label>
+                <input
+                  type="text"
+                  id="contrato"
+                  value={contrato?.id || ""}
+                  readOnly
+                  className="w-full px-4 py-2 border rounded bg-gray-100 cursor-not-allowed"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="numFactura">
+                  Número de Factura
+                </label>
+                <input
+                  type="text"
+                  id="numFactura"
+                  value={numFactura}
+                  onChange={(e) => setNumFactura(e.target.value)}
+                  placeholder="Ingresa el número de factura"
+                  className="w-full px-4 py-2 border rounded"
+                />
+              </div>
+              <button
+                type="submit"
+                className="w-full py-2 px-4 bg-teal-500 text-white rounded hover:bg-teal-600"
+              >
+                Registrar Pago
+              </button>
+            </form>
+          </div>
+
           <button
             className="mt-6 py-2 px-4 bg-teal-500 text-white rounded hover:bg-teal-600"
-            onClick={handleVolverClick}
+            onClick={() => setMostrarPagos(false)}
           >
             Volver
           </button>
         </div>
       ) : (
-        // Contenido principal del contrato
         <div>
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-teal-700">Villa Campestre</h1>
@@ -193,7 +228,7 @@ const Contrato = ({ userId }) => {
             </button>
             <button
               className="py-2 px-6 bg-teal-500 text-white rounded hover:bg-teal-600"
-              onClick={handlePagarClick}
+              onClick={() => setMostrarPagos(true)}
             >
               Pagar
             </button>
