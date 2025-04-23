@@ -51,25 +51,31 @@ const Contrato = ({ userId }) => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-
+  
     if (!numFactura) {
       alert("Por favor, ingresa el número de factura.");
       return;
     }
-
+  
     try {
+      // Crear una fecha con la hora ajustada a las 00:00:00
+      const fechaActual = new Date();
+      const fechaSinHora = new Date(fechaActual.getFullYear(), fechaActual.getMonth(), fechaActual.getDate());
+  
       await addDoc(collection(db, "pagos"), {
-        contrato: contrato?.id,
-        num_factura: numFactura,
+        fecha_pago: fechaSinHora, // Guardar la fecha como tipo timestamp
+        num_contrato: contrato?.id || "", // Guardar el número de contrato
+        num_factura: numFactura, // Guardar el número de factura
       });
-
+  
       alert("Pago registrado exitosamente.");
-      setNumFactura("");
+      setNumFactura(""); // Limpiar el campo de factura
     } catch (error) {
       console.error("Error al registrar el pago:", error);
       alert("Hubo un error al registrar el pago. Inténtalo de nuevo.");
     }
   };
+
 
   if (loading) {
     return <p>Cargando datos del contrato...</p>;
@@ -142,6 +148,7 @@ const Contrato = ({ userId }) => {
             </div>
           </div>
 
+
           <div className="mt-8">
             <h3 className="text-xl font-bold mb-4">Registrar Pago</h3>
             <form onSubmit={handleSubmit} className="bg-white p-6 rounded shadow-md">
@@ -153,6 +160,23 @@ const Contrato = ({ userId }) => {
                   type="text"
                   id="contrato"
                   value={contrato?.id || ""}
+                  readOnly
+                  className="w-full px-4 py-2 border rounded bg-gray-100 cursor-not-allowed"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-gray-700 font-bold mb-2" htmlFor="fechaPago">
+                  Fecha de Pago
+                </label>
+                <input
+                  type="text"
+                  id="fechaPago"
+                  value={new Date().toLocaleDateString("es-ES", {
+                    weekday: "long",
+                    day: "numeric",
+                    month: "long",
+                    year: "numeric",
+                  })}
                   readOnly
                   className="w-full px-4 py-2 border rounded bg-gray-100 cursor-not-allowed"
                 />
