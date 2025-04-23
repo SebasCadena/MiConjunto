@@ -54,6 +54,13 @@ const Contrato = ({ userId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    // Validar que exista un contrato
+    if (!contrato) {
+      alert("No se puede registrar el pago. No se encontró un contrato asociado.");
+      return;
+    }
+  
+    // Validar que el número de factura esté ingresado
     if (!numFactura) {
       alert("Por favor, ingresa el número de factura.");
       return;
