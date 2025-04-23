@@ -54,6 +54,13 @@ const Contrato = ({ userId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
   
+    // Validar que exista un contrato
+    if (!contrato) {
+      alert("No se puede registrar el pago. No se encontró un contrato asociado.");
+      return;
+    }
+  
+    // Validar que el número de factura esté ingresado
     if (!numFactura) {
       alert("Por favor, ingresa el número de factura.");
       return;
@@ -119,7 +126,7 @@ const Contrato = ({ userId }) => {
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
                   <img
-                    src="/path/to/bancolombia-logo.png"
+                    src="src\img\bancos\Bancolombia.png"
                     alt="Bancolombia"
                     className="w-10 h-10"
                   />
@@ -139,9 +146,10 @@ const Contrato = ({ userId }) => {
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
                   <img
-                    src="/path/to/davivienda-logo.png"
+                    src="src\img\bancos\davivienda.png"
                     alt="Davivienda"
                     className="w-10 h-10"
+                    style={{ borderRadius: "50%" }}
                   />
                 </div>
                 <p className="font-semibold text-lg">Davivienda</p>
@@ -159,9 +167,10 @@ const Contrato = ({ userId }) => {
               <div className="flex items-center mb-4">
                 <div className="w-12 h-12 bg-gray-300 rounded-full mr-4 flex items-center justify-center">
                   <img
-                    src="/path/to/nequi-logo.png"
+                    src="src\img\bancos\nequi.webp"
                     alt="Nequi"
                     className="w-10 h-10"
+                    style={{ borderRadius: "50%" }}
                   />
                 </div>
                 <p className="font-semibold text-lg">Nequi</p>
