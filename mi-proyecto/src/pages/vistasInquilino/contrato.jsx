@@ -1,6 +1,8 @@
 import { useState, useEffect } from "react";
 import { db } from "../firebaseConfig";
 import { collection, query, where, getDocs, addDoc } from "firebase/firestore";
+import jsPDF from "jspdf"; // Importar jsPDF
+
 
 const Contrato = ({ userId }) => {
   const [contrato, setContrato] = useState(null);
@@ -74,6 +76,32 @@ const Contrato = ({ userId }) => {
       console.error("Error al registrar el pago:", error);
       alert("Hubo un error al registrar el pago. Inténtalo de nuevo.");
     }
+  };
+
+  const generarFactura = () => {
+    const doc = new jsPDF();
+  
+    // Título de la factura
+    doc.setFontSize(18);
+    doc.text("Factura de Pago", 20, 20);
+  
+    // Información del contrato
+    doc.setFontSize(12);
+    doc.text(`Número de Contrato: ${contrato?.id || "No disponible"}`, 20, 40);
+    doc.text(`Nombre del Inquilino: ${contrato?.nombre_inquilino || "No disponible"}`, 20, 50);
+    doc.text(`Apartamento: ${contrato?.codigo_apartamento || "No asignado"}`, 20, 60);
+    doc.text(`Valor: $${contrato?.valor_apartamento || "0"}`, 20, 70);
+  
+    // Fecha de pago
+    const fechaActual = new Date().toLocaleDateString("es-ES", {
+      day: "numeric",
+      month: "long",
+      year: "numeric",
+    });
+    doc.text(`Fecha de Pago: ${fechaActual}`, 20, 80);
+  
+    // Guardar el archivo PDF
+    doc.save(`Factura_${contrato?.id || "sin_id"}.pdf`);
   };
 
 
@@ -202,6 +230,13 @@ const Contrato = ({ userId }) => {
               </button>
             </form>
           </div>
+
+          <button
+            className="mt-4 py-2 px-4 bg-teal-500 text-white rounded hover:bg-teal-600"
+            onClick={generarFactura}
+          >
+            Descargar Factura
+          </button>
 
           <button
             className="mt-6 py-2 px-4 bg-teal-500 text-white rounded hover:bg-teal-600"
