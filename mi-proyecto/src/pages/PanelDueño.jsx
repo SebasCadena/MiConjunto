@@ -10,6 +10,7 @@ import Contratos from "./vistas/contratos";
 import EstadoPagos from "./vistas/estadoPagos";
 import Ingresos from "./vistas/ingresos";
 import Historial from "./vistas/historial";
+import PagosTotales from "./vistas/pagosTotales";
 
 
 const PanelDueño = () => {
@@ -38,7 +39,7 @@ const PanelDueño = () => {
     };
 
     cargarInquilinos();
-  }, []);
+  }, []); 
 
   // Estado para controlar la vista activa
   const [vistaActiva, setVistaActiva] = useState("inquilinos"); 
@@ -240,7 +241,14 @@ const PanelDueño = () => {
             >
               Historial
           </button>
+        <button
+            onClick={() => setVistaActiva("pagosTotales")}
+            className={`py-2 px-4 rounded ${vistaActiva === "pagosTotales" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
+          >
+            Pagos
+        </button>
 
+          
           </nav>
         <button
           onClick={cerrarSesion}
@@ -275,6 +283,7 @@ const PanelDueño = () => {
         {vistaActiva === "estadoPagos" && <EstadoPagos />}
         {vistaActiva === "ingresos" && <Ingresos />}
         {vistaActiva === "historial" && <Historial />}
+        {vistaActiva === "pagosTotales" && <PagosTotales />}
 
 
 
