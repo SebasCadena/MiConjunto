@@ -6,6 +6,8 @@ import ProtectedRoute from "./components/ProtectedRoute";
 import { FirestoreProvider } from "./context/FirestoreContext"; // Importa el FirestoreProvider
 import { useEffect } from "react";
 import { collection, getDocs, updateDoc, doc } from "firebase/firestore";
+import Pagos from "./pages/vistasInquilino/pagos";
+
 import { db } from "./pages/firebaseConfig";
 
 const App = () => {
@@ -67,6 +69,15 @@ const App = () => {
             </ProtectedRoute>
           }
         />
+        <Route
+          path="/inquilino/pagos"
+          element={
+            <ProtectedRoute requiredRole="inquilino">
+              <PanelInquilino>
+              <Pagos/>
+              </PanelInquilino>
+            </ProtectedRoute>
+          } />
       </Routes>
     </FirestoreProvider>
   );

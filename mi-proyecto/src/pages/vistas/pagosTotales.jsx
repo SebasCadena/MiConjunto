@@ -2,12 +2,11 @@ import React, { useState, useEffect } from 'react';
 import { db } from '../firebaseConfig';
 import { collection, getDocs } from 'firebase/firestore';
 
+
 const PagosTotales = () => {
   const [pagos, setPagos] = useState([]);
   const [filtroFecha, setFiltroFecha] = useState('');
-  const [filtroInquilino, setFiltroInquilino] = useState('');
-  const [filtroApartamento, setFiltroApartamento] = useState('');
-  const [pagosFiltrados, setPagosFiltrados] = useState([]);
+  const [filtroInquilino, setFiltroInquilino] = useState('');  const [filtroApartamento, setFiltroApartamento] = useState('');  const [pagosFiltrados, setPagosFiltrados] = useState([]);
 
   useEffect(() => {
     obtenerPagos();
@@ -26,6 +25,7 @@ const PagosTotales = () => {
         ...doc.data()
       }));
 
+      
       // Crear un objeto para mapear contratos por id
       const contratosMap = {};
       contratosData.forEach(contrato => {
@@ -39,30 +39,20 @@ const PagosTotales = () => {
         ...doc.data()
       }));
 
-      console.log('pagosData:',pagosData);
-          pagosData.forEach(pago => { // Iterar sobre cada pago y rellenar los campos faltantes
-            const contrato = contratosMap[pago.num_contrato];
-            if (contrato) {
-              pago.valor = contrato.valor_apartamento;
-              pago.nombre_inquilino = contrato.nombre_inquilino;
-              pago.codigo_apartamento = contrato.codigo_apartamento;
-            }
-            console.log('pago modificado:', pago);
-          });
-          setPagos(pagosData);
-        } catch (error) {
-      console.error('Error al obtener los pagos:', error);
-    }
-
-    pagosData.forEach(pago => { // Iterar sobre cada pago y rellenar los campos faltantes
+      console.log('pagosData:', pagosData);
+      pagosData.forEach(pago => { // Iterar sobre cada pago y rellenar los campos faltantes
         const contrato = contratosMap[pago.num_contrato];
         if (contrato) {
           pago.valor = contrato.valor_apartamento;
           pago.nombre_inquilino = contrato.nombre_inquilino;
           pago.codigo_apartamento = contrato.codigo_apartamento;
         }
-        
+        console.log('pago modificado:', pago);
       });
+      setPagos(pagosData);
+    } catch (error) {
+      console.error('Error al obtener los pagos:', error);
+    }
   };
 
   const filtrarPagos = () => {
@@ -101,10 +91,11 @@ const PagosTotales = () => {
 
     setPagosFiltrados(pagosFiltrados);
   };
-
+  
   return (
     <div className="p-6">
       <h2 className="text-2xl font-semibold mb-4">Pagos Totales</h2>
+      
 
       <div className="flex space-x-4 mb-4">
         <div>
@@ -138,7 +129,7 @@ const PagosTotales = () => {
                 {pago.fecha_pago && typeof pago.fecha_pago.toDate === 'function' ? pago.fecha_pago.toDate().toLocaleDateString(): ''}
               </td>
               <td className="py-2 px-4 border-b">{pago.valor}</td>   
-              <td className="py-2 px-4 border-b">{pago.nombre_inquilino}</td>
+              <td className="py-2 px-4 border-b">{pago.nombre_inquilino}</td> 
               <td className="py-2 px-4 border-b">{pago.codigo_apartamento}</td>
               <td className="py-2 px-4 border-b">{pago.num_factura}</td>
             </tr>
