@@ -82,13 +82,10 @@ const PanelInquilino = ({ userId }) => {
           {hayPagosPendientes ? (
             <div className="text-center">
              <p className="text-red-600 font-semibold mb-2">
-                Tienes {cantidadPagosPendientes}{" "}
-                {cantidadPagosPendientes === 1 ? "pago" : "pagos"} pendiente
-                {cantidadPagosPendientes === 1 ? "" : "s"}
-                .              </p>
-                <button onClick={() => navigate("/inquilino/pagos")} className="py-2 px-6 bg-teal-500 text-white rounded hover:bg-teal-600">
-                  Pagar
-                </button>
+                Tienes {cantidadPagosPendientes}
+                {cantidadPagosPendientes === 1 ? " pago" : " pagos"} pendiente
+                {cantidadPagosPendientes === 1 ? "" : "s"}.
+             </p>
             </div>
           ) : (
             <div className="text-center">

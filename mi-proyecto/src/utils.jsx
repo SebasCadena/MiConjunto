@@ -115,12 +115,12 @@ async function actualizarEstadoCobros() {
     const querySnapshot = await getDocs(q);
     querySnapshot.forEach(async (docSnap) => {
       const cobro = docSnap.data();
-      const fechaVencimiento = cobro.fecha_vencimiento.toDate();
-      if (fechaVencimiento < new Date()) {
-        const cobroRef = doc(db, "cobros", docSnap.id);
-        await updateDoc(cobroRef, { estado: "Vencido" });
-        console.log(`Cobro ${docSnap.id} actualizado a Vencido`);
-      }
+      const fechaVencimiento = cobro.fecha_vencimiento.toDate();      
+      if (fechaVencimiento < new Date() && cobro.estado !== "Pagado") {
+          const cobroRef = doc(db, "cobros", docSnap.id);
+          await updateDoc(cobroRef, { estado: "Vencido" });
+          console.log(`Cobro ${docSnap.id} actualizado a Vencido`);
+      }  
     });
   } catch (error) {
     console.error("Error al actualizar el estado de los cobros:", error);

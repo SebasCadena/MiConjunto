@@ -53,6 +53,14 @@ function Contrato({ userId }) {
             return { ...cobro, atrasado: estaAtrasado };
           });
 
+          // Ordenar los cobros por año y mes de forma descendente
+          cobrosConEstado.sort((a, b) => {            
+            if (a.añoCorrespondiente !== b.añoCorrespondiente){
+               return a.añoCorrespondiente - b.añoCorrespondiente
+            }
+             return a.mesCorrespondiente - b.mesCorrespondiente
+          });
+
           setCobros(cobrosConEstado);
 
 
@@ -191,7 +199,7 @@ function Contrato({ userId }) {
                   <p>Valor: ${cobro.valor_cobro}</p>
                   <p>Estado: {cobro.estado}</p>
                 </div>
-                {cobro.estado === 'Pendiente' && (
+                {(cobro.estado === 'Pendiente' || cobro.estado === 'Vencido') && (
                   <button
                     onClick={() => handleOpenModal(cobro)}
                     className="bg-green-500 text-white px-4 py-2 rounded"
