@@ -6,6 +6,7 @@ import { signOut } from "firebase/auth"; // Asegúrate de importar signOut
 import Contrato from "./vistasInquilino/contrato"; // Importamos el componente Contrato
 import EditarPerfil from "./vistasInquilino/editarPerfil"; // Importamos el componente EditarPerfil
 import Pagos from "./vistasInquilino/pagos";
+import Notificaciones from "./vistasInquilino/notificaciones";
 import { useNavigate } from "react-router-dom";// Importar useNavigate
 
 const PanelInquilino = ({ userId }) => {
@@ -108,6 +109,12 @@ const PanelInquilino = ({ userId }) => {
             >
               Editar Perfil
             </button>
+             <button
+              onClick={() => setView("notificaciones")}
+              className="py-2 px-4 bg-blue-100 rounded hover:bg-blue-200"
+            >
+              Notificaciones
+            </button>
             <button
               onClick={() => setView("pagos")}
               className="py-2 px-4 bg-blue-100 rounded hover:bg-blue-200"
@@ -128,6 +135,7 @@ const PanelInquilino = ({ userId }) => {
         {view === "contrato" && <Contrato userId={userId} />}        
          {view === "editarPerfil" && <EditarPerfil userId={userId} />}
         {view === "pagos" && <Pagos userId={userId} />} {/* Renderizar Pagos */}
+        {view === "notificaciones" && <Notificaciones />}
       </main>
     </div>
   );
