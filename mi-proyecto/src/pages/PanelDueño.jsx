@@ -14,6 +14,7 @@ import PagosTotales from "./vistas/pagosTotales";
 
 
 const PanelDueño = () => {
+
   const [inquilinos, setInquilinos] = useState([]);
   const [nuevoInquilino, setNuevoInquilino] = useState({
     nombre: "",
