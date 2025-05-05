@@ -134,8 +134,8 @@ const PanelInquilino = ({ userId }) => {
       <main className="flex-1 p-8">
         {view === "contrato" && <Contrato userId={userId} />}        
          {view === "editarPerfil" && <EditarPerfil userId={userId} />}
-        {view === "pagos" && <Pagos userId={userId} />} {/* Renderizar Pagos */}
-        {view === "notificaciones" && <Notificaciones />}
+        {view === "pagos" && <Pagos userId={userId} />}
+        {view === "notificaciones" && <Notificaciones userId={userId} />}
       </main>
     </div>
   );
