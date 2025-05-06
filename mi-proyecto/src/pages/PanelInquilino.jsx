@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { db, auth } from "./firebaseConfig";
 import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
 import { getContratos } from "../utils";
@@ -16,7 +16,12 @@ const PanelInquilino = ({ userId }) => {
   const [hayPagosPendientes, setHayPagosPendientes] = useState(false);
   const [cantidadPagosPendientes, setCantidadPagosPendientes] = useState(0);
   const [showNotificationsMenu, setShowNotificationsMenu] = useState(false);
-  
+  const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState([]);
+
+  const buttonRef = useRef(null);
+  const menuRef = useRef(null);
+
+
   useEffect(() => {
     const cargarDatosUsuario = async () => {
       setLoading(true);
@@ -48,6 +53,21 @@ const PanelInquilino = ({ userId }) => {
         } else {
           console.error("No se encontro el documento del usuario.");
         }
+        
+        // Cargar notificaciones no leídas
+        const notificacionesQuery = query(collection(db, "notificaciones"),
+        where("leido", "==", false),
+        where("idDestinatario", "in", [userId, null]));
+        
+        const notificacionesSnap = await getDocs(notificacionesQuery);
+        const notificaciones = notificacionesSnap.docs.map((doc) => ({
+          
+          id: doc.id,
+          ...doc.data(),
+        }));
+        setNotificacionesNoLeidas(notificaciones);
+
+
         } catch (error) {
           console.error("Error al cargar los datos del usuario:", error);
         } finally{
@@ -58,6 +78,25 @@ const PanelInquilino = ({ userId }) => {
       cargarDatosUsuario();
     }
   }, [userId]);
+
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        buttonRef.current &&
+        !buttonRef.current.contains(event.target) &&
+        menuRef.current &&
+        !menuRef.current.contains(event.target)
+      ) {
+        setShowNotificationsMenu(false);
+      }
+    };
+    if (showNotificationsMenu) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [showNotificationsMenu]);
     const navigate = useNavigate();
   const cerrarSesion = async () => {
     try {
@@ -76,7 +115,54 @@ const PanelInquilino = ({ userId }) => {
   return (
     <div className="flex h-screen bg-teal-50">
       {/* Barra lateral */}
-      <aside className="w-1/4 bg-teal-100 p-6 flex flex-col items-center">
+      <aside className="w-1/4 bg-teal-100 p-6 flex flex-col items-center"> <div className="relative" ref={buttonRef}> <button
+              onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
+              className="mb-4 bg-blue-500 rounded-full p-2 relative"           
+            >
+            
+                <svg className="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 14 20">
+                    <path d="M12.133 10.632v-1.8A5.406 5.406 0 0 0 7.979 3.57.946.946 0 0 0 8 3.464V1.1a1 1 0 0 0-2 0v2.364a.946.946 0 0 0 .021.106 5.406 5.406 0 0 0-4.154 5.262v1.8C1.867 13.018 0 13.614 0 14.807 0 15.4 0 16 .538 16h12.924C14 16 14 15.4 14 14.807c0-1.193-1.867-1.789-1.867-4.175ZM3.823 17a3.453 3.453 0 0 0 6.354 0H3.823Z"/>
+                </svg>
+                {notificacionesNoLeidas.length > 0 && (
+                  <div className="absolute block w-3 h-3 bg-red-500 border-2 border-white rounded-full -top-0.5 start-2.5 dark:border-gray-900">
+                    <span className="absolute -top-1 start-1 text-[10px] text-white">
+                      {notificacionesNoLeidas.length}
+                    </span>
+                  </div>
+                )}
+              </button>
+              {showNotificationsMenu && (
+                  <div className="z-20 absolute top-10 right-0 w-[300px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700" ref={menuRef}>
+                      <div className="block px-4 py-2 font-medium text-center text-gray-700 rounded-t-lg bg-gray-50 dark:bg-gray-800 dark:text-white">
+                          Notifications
+                      </div>
+                      <div className="divide-y divide-gray-100 dark:divide-gray-700 max-h-[300px] overflow-y-auto">
+                        {notificacionesNoLeidas.length > 0 ? (
+                          notificacionesNoLeidas.map((notificacion) => (
+                            <a href="#" key={notificacion.id} className="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">
+                              <div className="w-full ps-3">
+                                <div className="text-gray-500 text-sm mb-1.5 dark:text-gray-400">
+                                  <span className="font-semibold text-gray-900 dark:text-white">{notificacion.titulo}</span>: {notificacion.mensaje}
+                                </div>
+                                <div className="text-xs text-blue-600 dark:text-blue-500">Hace poco</div>
+                              </div>
+                            </a>
+                          ))
+                        ) : (
+                          <a href="#" className="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">
+                            <div className="w-full ps-3">No tienes notificaciones</div>
+                          </a>
+                        )}
+                      </div>
+                      <a href="#" className="block py-2 text-sm font-medium text-center text-gray-900 rounded-b-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white">
+                          <div className="inline-flex items-center ">
+                              Ver todos
+                          </div>
+                      </a>
+                  </div>
+              )}
+            </div>
+        
         <div className="mb-6 text-center">
           <div className="w-24 h-24 bg-blue-500 rounded-full mb-4 mx-auto"></div>
           <h2 className="font-bold text-lg">Mi Conjunto</h2>
@@ -96,41 +182,8 @@ const PanelInquilino = ({ userId }) => {
           )}
 
             <p className="text-gray-600">{usuario?.nombre || "Nombre no disponible"}</p>
-          </div>
-          {/* Botón de Notificaciones */}
-          <div className="relative w-full">
-           <button
-              onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
-              className="mb-4 bg-blue-500 rounded-full p-2 relative"
-            >
-                <svg className="w-5 h-5 text-white" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" fill="currentColor" viewBox="0 0 14 20">
-                    <path d="M12.133 10.632v-1.8A5.406 5.406 0 0 0 7.979 3.57.946.946 0 0 0 8 3.464V1.1a1 1 0 0 0-2 0v2.364a.946.946 0 0 0 .021.106 5.406 5.406 0 0 0-4.154 5.262v1.8C1.867 13.018 0 13.614 0 14.807 0 15.4 0 16 .538 16h12.924C14 16 14 15.4 14 14.807c0-1.193-1.867-1.789-1.867-4.175ZM3.823 17a3.453 3.453 0 0 0 6.354 0H3.823Z"/>
-                </svg>
-                <div className="absolute block w-3 h-3 bg-red-500 border-2 border-white rounded-full -top-0.5 start-2.5 dark:border-gray-900"></div>
-              </button>
-              {showNotificationsMenu && (
-                  <div className="z-20 absolute top-10 right-0 w-[300px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700">
-                      <div className="block px-4 py-2 font-medium text-center text-gray-700 rounded-t-lg bg-gray-50 dark:bg-gray-800 dark:text-white">
-                          Notifications
-                      </div>
-                      <div className="divide-y divide-gray-100 dark:divide-gray-700">
-                          {/* Ejemplo de un elemento de la lista */}
-                          <a href="#" className="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">
-                              {/* Espacio para la imagen o icono */}
-                              <div className="w-full ps-3">
-                                  {/* Contenido de la notificación */}
-                              </div>
-                          </a>
-                      </div>
-                      <a href="#" className="block py-2 text-sm font-medium text-center text-gray-900 rounded-b-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white">
-                          <div className="inline-flex items-center ">
-                              Ver todos
-                          </div>
-                      </a>
-                  </div>
-              )}
-          </div>
-          <nav className="flex flex-col space-y-4 w-full">
+          </div>          
+          <nav className="flex flex-col space-y-4 w-full">          
             <button
               onClick={() => setView("contrato")}
               className="py-2 px-4 bg-blue-100 rounded hover:bg-blue-200"
@@ -162,7 +215,7 @@ const PanelInquilino = ({ userId }) => {
               Cerrar sesión
             </button>
           </nav>
-        </aside>
+        </aside>      
         
       {/* Contenido principal */}
       <main className="flex-1 p-8">
