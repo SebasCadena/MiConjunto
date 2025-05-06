@@ -157,10 +157,10 @@ const Ingresos = () => {
         </select>
       </div>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         {/* Tarjeta de pagos por mes */}
-        <div className="p-4 bg-gray-50 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Pagos por Mes</h2>
+        <div className="p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Pagos por Mes</h2>
           <BarChart
             dataset={datasetByMonth}
             xAxis={[{ dataKey: "month" }]}
@@ -170,8 +170,8 @@ const Ingresos = () => {
         </div>
 
         {/* Tarjeta de pagos por año */}
-        <div className="p-4 bg-gray-50 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Pagos por Año</h2>
+        <div className="p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Pagos por Año</h2>
           <BarChart
             dataset={datasetByYear}
             xAxis={[{ dataKey: "year" }]}
@@ -181,8 +181,8 @@ const Ingresos = () => {
         </div>
 
         {/* Tarjeta de métodos de pago (diagrama de pastel) */}
-        <div className="p-4 bg-gray-50 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Métodos de Pago</h2>
+        <div className="p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Métodos de Pago</h2>
           <div className="flex justify-center items-center">
             <PieChart
               series={[
@@ -191,8 +191,8 @@ const Ingresos = () => {
                   innerRadius: 80,
                 },
               ]}
-              width={200}
-              height={200}
+              width={250}
+              height={250}
             >
               <PieCenterLabel>Métodos</PieCenterLabel>
             </PieChart>
@@ -200,8 +200,8 @@ const Ingresos = () => {
         </div>
 
         {/* Tarjeta de dinero por método de pago (gráfico de barras) */}
-        <div className="p-4 bg-gray-50 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-2">Dinero por Método de Pago</h2>
+        <div className="p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Dinero por Método de Pago</h2>
           {datasetByMetodo.length > 0 ? (
             <BarChart
               dataset={datasetByMetodo}
@@ -214,6 +214,7 @@ const Ingresos = () => {
           )}
         </div>
       </div>
+      
     </div>
   );
 };
