@@ -115,7 +115,7 @@ const PanelInquilino = ({ userId }) => {
   return (
     <div className="flex h-screen bg-teal-50">
       {/* Barra lateral */}
-      <aside className="w-1/4 bg-teal-100 p-6 flex flex-col items-center"> <div className="relative" ref={buttonRef}> <button
+      <aside className="w-1/4 bg-teal-100 p-6 flex flex-col items-center"> <div className="relative" ref={buttonRef}><button
               onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
               className="mb-4 bg-blue-500 rounded-full p-2 relative"           
             >
@@ -132,7 +132,7 @@ const PanelInquilino = ({ userId }) => {
                 )}
               </button>
               {showNotificationsMenu && (
-                  <div className="z-20 absolute top-10 right-0 w-[300px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700" ref={menuRef}>
+                  <div className="z-20 absolute top-10 left-1/2 -translate-x-1/2 w-[350px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700 max-h-[400px]" ref={menuRef}>
                       <div className="block px-4 py-2 font-medium text-center text-gray-700 rounded-t-lg bg-gray-50 dark:bg-gray-800 dark:text-white">
                           Notifications
                       </div>
@@ -161,7 +161,7 @@ const PanelInquilino = ({ userId }) => {
                       </a>
                   </div>
               )}
-            </div>
+            </div>        
         
         <div className="mb-6 text-center">
           <div className="w-24 h-24 bg-blue-500 rounded-full mb-4 mx-auto"></div>
