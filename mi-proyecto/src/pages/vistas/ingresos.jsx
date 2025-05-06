@@ -1,6 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { BarChart } from "@mui/x-charts/BarChart";
 import { PieChart } from "@mui/x-charts/PieChart";
+import { useDrawingArea } from "@mui/x-charts/hooks";
+import { styled } from "@mui/material/styles";
 import { db } from "../firebaseConfig"; // Asegúrate de importar tu configuración de Firebase
 import { collection, getDocs } from "firebase/firestore";
 
@@ -15,6 +17,23 @@ const chartSetting = {
   ],
   height: 250, // Reducir la altura de la gráfica
 };
+
+// Definir el componente PieCenterLabel
+const StyledText = styled("text")(({ theme }) => ({
+  fill: theme.palette.text.primary,
+  textAnchor: "middle",
+  dominantBaseline: "central",
+  fontSize: 14,
+}));
+
+function PieCenterLabel({ children }) {
+  const { width, height, left, top } = useDrawingArea();
+  return (
+    <StyledText x={left + width / 2} y={top + height / 2}>
+      {children}
+    </StyledText>
+  );
+}
 
 const Ingresos = () => {
   const [datasetByMonth, setDatasetByMonth] = useState([]);
@@ -159,21 +178,20 @@ const Ingresos = () => {
         {/* Tarjeta de métodos de pago */}
         <div className="p-4 bg-gray-50 rounded-lg shadow">
           <h2 className="text-lg font-semibold text-gray-800 mb-2">Métodos de Pago</h2>
-          <PieChart
-            series={[
-              {
-                data: paymentMethodsData,
-                innerRadius: 30, // Reducir el radio interno
-                outerRadius: 80, // Reducir el radio externo
-                paddingAngle: 3,
-                cornerRadius: 5,
-                startAngle: 0,
-                endAngle: 360,
-                cx: 100, // Ajustar posición horizontal
-                cy: 100, // Ajustar posición vertical
-              },
-            ]}
-          />
+          <div className="flex justify-center items-center">
+            <PieChart
+              series={[
+                {
+                  data: paymentMethodsData, // Datos dinámicos de métodos de pago
+                  innerRadius: 80, // Radio interno ajustado
+                },
+              ]}
+              width={200} // Ancho de la gráfica
+              height={200} // Altura de la gráfica
+            >
+              <PieCenterLabel>Métodos</PieCenterLabel>
+            </PieChart>
+          </div>
         </div>
       </div>
     </div>
