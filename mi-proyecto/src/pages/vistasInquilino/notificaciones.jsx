@@ -3,6 +3,40 @@ import { collection, getDocs, query, where, orderBy } from "firebase/firestore";
 import { db } from "../firebaseConfig";
 
 const Notificaciones = ({ userId }) => {
+  const getCategoryBadgeClass = (category) => {
+    switch (category) {
+      case "Pago":{
+        return {
+          classes: "bg-green-100 text-green-800",
+          icon: "💰",
+        };
+      }
+      case "Informacion":{
+        return {
+          classes: "bg-blue-100 text-blue-800",
+          icon: "ℹ️",
+        };
+      }
+      case "Mantenimiento":{
+        return {
+          classes: "bg-yellow-100 text-yellow-800",
+          icon: "🛠️",
+        };
+      }
+      case "Comunicado":{
+        return {
+          classes: "bg-purple-100 text-purple-800",
+          icon: "📢",
+        };
+      }
+      default:
+        return { classes: "bg-gray-100 text-gray-800", icon: "✨" };
+    }
+  };
+
+
+
+
   const [notificaciones, setNotificaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -61,19 +95,26 @@ const Notificaciones = ({ userId }) => {
         <table className="min-w-full bg-white shadow-md rounded">
           <thead>
             <tr className="bg-gray-200">
+              <th className="px-4 py-2">Categoría</th>
               <th className="px-4 py-2">Título</th>
               <th className="px-4 py-2">Mensaje</th>
               <th className="px-4 py-2">Prioridad</th>
-              <th className="px-4 py-2">Categoría</th>
             </tr>
           </thead>
           <tbody>
             {notificaciones.map((notificacion) => (
               <tr key={notificacion.id} className="border-b border-gray-200">
-                <td className="px-4 py-2">{notificacion.titulo}</td>
-                <td className="px-4 py-2">{notificacion.mensaje}</td>
-                <td className="px-4 py-2">{notificacion.prioridad}</td>
-                <td className="px-4 py-2">{notificacion.categoria}</td>
+                  <td className="px-4 py-2">
+                  <span
+                    className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeClass(notificacion.categoria).classes}`}
+                 
+
+                  >
+                    {notificacion.categoria}
+                  </span>
+                </td>                <td className="px-4 py-2">{notificacion.titulo}</td>
+                <td className="px-4 py-2 ">{notificacion.mensaje}</td>
+                <td className="px-4 py-2 ">{notificacion.prioridad}</td>
               </tr>
             ))}
           </tbody>

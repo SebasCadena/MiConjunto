@@ -27,6 +27,7 @@ const NotificacionesDueño = () => {
                 const inquilinosData = querySnapshot.docs.map((doc) => ({
                     id: doc.id,
                     nombre: doc.data().nombre,
+                    activo: doc.data().activo,
                     rol: doc.data().rol,
                 })).filter((inquilino) => inquilino.rol === "inquilino");
                 setInquilinos(inquilinosData);
@@ -64,27 +65,43 @@ const NotificacionesDueño = () => {
         }
 
         // Si la validacion pasa, la ejecucion continua aqui
-        const notificacionData = {
-          idDestinatario: idDestinatario,
-          titulo: titulo,
-          mensaje: mensaje,
-          prioridad: prioridad,
-          categoria: categoria,
-        };
-
         try {
-            await crearNotificacion(notificacionData); // Llamar a crearNotificacion
-            alert("Notificacion creada correctamente.");
+            if (idDestinatario === null) {
+                // Crear notificaciones para cada inquilino activo
+                const inquilinosActivos = inquilinos.filter(inquilino => inquilino.activo === true);
+                const notificacionesPromises = inquilinosActivos.map(inquilino => {
+                    const notificacionData = {
+                        idDestinatario: inquilino.id,
+                        titulo: titulo,
+                        mensaje: mensaje,
+                        prioridad: prioridad,
+                        categoria: categoria,
+                        leido: false,
+                    };
+                    return crearNotificacion(notificacionData); // Llamar a crearNotificacion para cada inquilino
+                });
+                await Promise.all(notificacionesPromises); // Esperar a que todas las notificaciones se creen
+            } else {
+                // Crear una notificación individual para el inquilino seleccionado
+                const notificacionData = {
+                    idDestinatario: idDestinatario,
+                    titulo: titulo,
+                    mensaje: mensaje,
+                    prioridad: prioridad,
+                    categoria: categoria,
+                };
+                await crearNotificacion(notificacionData);
+            }
 
+            alert("Notificacion creada correctamente.");
             setTitulo("");
             setMensaje("");
             setPrioridad("");
             setCategoria("");
             setIdDestinatario("");
             setMostrarFormulario(false);
-        } catch (error) {
-            console.error("Error al crear la notificación:", error);
-
+        } catch (error) {           
+            console.error("Error al crear la notificación:", error);            
             alert("Ocurrió un error al crear la notificación.");
         }
 
@@ -188,6 +205,7 @@ const NotificacionesDueño = () => {
             onChange={(e) => setIdDestinatario(e.target.value === "" ? null : e.target.value)}
           >
             <option value="">Seleccione destinatario</option>
+            <option value="">General</option> {/* Añadimos esta línea */}
             {inquilinos.map((inquilino) =>(
               <option key={inquilino.id} value={inquilino.id}>
                 {inquilino.nombre}

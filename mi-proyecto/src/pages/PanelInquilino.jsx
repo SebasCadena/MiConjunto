@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { db, auth } from "./firebaseConfig";
-import { doc, getDoc, collection, query, where, getDocs } from "firebase/firestore";
+import { doc, getDoc, collection, query, where, getDocs, updateDoc } from "firebase/firestore";
 import { getContratos } from "../utils";
 import { signOut } from "firebase/auth"; // Asegúrate de importar signOut
 import Contrato from "./vistasInquilino/contrato"; // Importamos el componente Contrato
@@ -10,6 +10,19 @@ import Notificaciones from "./vistasInquilino/notificaciones";
 import { useNavigate } from "react-router-dom";// Importar useNavigate
 
 const PanelInquilino = ({ userId }) => {
+
+  const getIconForCategory = (category) => {
+    switch (category) {
+      case "Pago": return "💰";
+      case "Informacion": return "ℹ️";
+      case "Mantenimiento": return "🛠️";
+      case "Comunicado": return "📢";
+      case "Otros": return "✨";
+      default: return "";
+    }
+  };
+
+
   const [usuario, setUsuario] = useState(null);
   const [view, setView] = useState("contrato"); // Estado para controlar la vista actual
   const [loading, setLoading] = useState(true); // Estado para indicar si la información está cargando
@@ -98,6 +111,17 @@ const PanelInquilino = ({ userId }) => {
     };
   }, [showNotificationsMenu]);
     const navigate = useNavigate();
+    const marcarTodasComoLeidas = async () => {
+      try {
+        for (const notificacion of notificacionesNoLeidas) {
+          await updateDoc(doc(db, "notificaciones", notificacion.id), { leido: true });
+        }
+        setNotificacionesNoLeidas([]);
+      } catch (error) {
+        console.error("Error al marcar todas las notificaciones como leídas:", error);
+      }
+    };
+
   const cerrarSesion = async () => {
     try {
       await signOut(auth);
@@ -141,7 +165,8 @@ const PanelInquilino = ({ userId }) => {
                           notificacionesNoLeidas.map((notificacion) => (
                             <a href="#" key={notificacion.id} className="flex px-4 py-3 hover:bg-gray-100 dark:hover:bg-gray-700">
                               <div className="w-full ps-3">
-                                <div className="text-gray-500 text-sm mb-1.5 dark:text-gray-400">
+                                <div className="text-gray-500 text-sm mb-1.5 dark:text-gray-400">                                 
+                                  <span className="mr-1">{getIconForCategory(notificacion.categoria)}</span>
                                   <span className="font-semibold text-gray-900 dark:text-white">{notificacion.titulo}</span>: {notificacion.mensaje}
                                 </div>
                                 <div className="text-xs text-blue-600 dark:text-blue-500">Hace poco</div>
@@ -154,9 +179,9 @@ const PanelInquilino = ({ userId }) => {
                           </a>
                         )}
                       </div>
-                      <a href="#" className="block py-2 text-sm font-medium text-center text-gray-900 rounded-b-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white">
+                      <a onClick={marcarTodasComoLeidas} className="block py-2 text-sm font-medium text-center text-gray-900 rounded-b-lg bg-gray-50 hover:bg-gray-100 dark:bg-gray-800 dark:hover:bg-gray-700 dark:text-white">
                           <div className="inline-flex items-center ">
-                              Ver todos
+                              Marcar como leido
                           </div>
                       </a>
                   </div>
