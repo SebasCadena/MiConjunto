@@ -39,6 +39,7 @@ const Ingresos = () => {
   const [datasetByYear, setDatasetByYear] = useState([]);
   const [paymentMethodsData, setPaymentMethodsData] = useState([]);
   const [datasetByMetodo, setDatasetByMetodo] = useState([]);
+  const [apartmentsData, setApartmentsData] = useState([]); // Estado para la ocupación de apartamentos
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
 
@@ -131,7 +132,27 @@ const Ingresos = () => {
       }
     };
 
+    const fetchApartments = async () => {
+      try {
+        const apartmentsSnapshot = await getDocs(collection(db, "apartamentos"));
+        const apartments = apartmentsSnapshot.docs.map((doc) => doc.data());
+
+        const ocupados = apartments.filter((apt) => apt.ocupacion === true).length;
+        const noOcupados = apartments.filter((apt) => apt.ocupacion === false).length;
+
+        const dataset = [
+          { id: "Ocupados", value: ocupados, label: "Ocupados" },
+          { id: "No Ocupados", value: noOcupados, label: "No Ocupados" },
+        ];
+
+        setApartmentsData(dataset);
+      } catch (error) {
+        console.error("Error al obtener los datos de apartamentos:", error);
+      }
+    };
+
     fetchPagos();
+    fetchApartments();
   }, [selectedYear]);
 
   return (
@@ -213,10 +234,62 @@ const Ingresos = () => {
             <p className="text-gray-500 text-sm">Cargando datos...</p>
           )}
         </div>
+
+        
       </div>
-      
+
+      <br></br>
+      <h1 className="text-xl font-bold text-gray-800 mb-3">Resumen de Ocupacion</h1>
+        <p className="text-gray-600 mb-4 text-sm">Consulta los ingresos generados por año y mes.</p>
+
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">    
+        {/* Tarjeta de ocupación de apartamentos (diagrama de pastel) */}
+        <div className="p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Ocupación de Apartamentos</h2>
+          <div className="flex justify-center items-center">
+            <PieChart
+              series={[
+                {
+                  data: apartmentsData,
+                  innerRadius: 80,
+                },
+              ]}
+              width={250}
+              height={250}
+            >
+              <PieCenterLabel>Ocupación</PieCenterLabel>
+            </PieChart>
+          </div>
+        </div>
+
+        {/* Tarjeta de métodos de pago (diagrama de pastel) */}
+        <div className="p-6 bg-gray-50 rounded-lg shadow">
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Métodos de Pago</h2>
+          <div className="flex justify-center items-center">
+            <PieChart
+              series={[
+                {
+                  data: paymentMethodsData,
+                  innerRadius: 80,
+                },
+              ]}
+              width={250}
+              height={250}
+            >
+              <PieCenterLabel>Métodos</PieCenterLabel>
+            </PieChart>
+          </div>
+        </div>
+      </div>
+
     </div>
+
+
   );
+
+
+
+  
 };
 
 export default Ingresos;
