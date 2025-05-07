@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { collection, getDocs, query, orderBy } from "firebase/firestore";
 import { db } from "../firebaseConfig";
+import emailjs from '@emailjs/browser';
 import { crearNotificacion } from "../../utils";
 
 
@@ -27,6 +28,7 @@ const NotificacionesDueño = () => {
                 const inquilinosData = querySnapshot.docs.map((doc) => ({
                     id: doc.id,
                     nombre: doc.data().nombre,
+                    email: doc.data().email,
                     activo: doc.data().activo,
                     rol: doc.data().rol,
                 })).filter((inquilino) => inquilino.rol === "inquilino");
@@ -91,6 +93,36 @@ const NotificacionesDueño = () => {
                     categoria: categoria,
                 };
                 await crearNotificacion(notificacionData);
+                
+                // Encontrar el email del inquilino
+                const inquilino = inquilinos.find(i => i.id === idDestinatario);
+                if (inquilino && inquilino.email) {
+                    const toEmail = inquilino.email;
+                    
+                    // Enviar correo con emailjs
+                    const templateParams = {
+                        to_email: toEmail,
+                        titulo: titulo,
+                        mensaje: mensaje,
+                        categoria: categoria,
+                        prioridad: prioridad,
+                    };
+                    console.log('Sending email with params:', templateParams);
+
+                    emailjs.send(
+                        'service_7n1h9xn', // Your Service ID
+                        'template_nwa3h8e', // Your Template ID
+                        templateParams,
+                        'VkLV1s9U7qcNQGxWf' // Your Public Key
+                    )
+                    .then((response) => {
+                        console.log('Correo enviado exitosamente!', response.status, response.text);
+                        alert("Correo enviado correctamente.");
+                    }, (error) => {
+                        console.error('Error al enviar el correo:', error);
+                        alert("Ocurrió un error al enviar el correo.");
+                    });
+                } else {console.error("No se encontró el email del inquilino.");}
             }
 
             alert("Notificacion creada correctamente.");
