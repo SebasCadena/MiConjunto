@@ -258,7 +258,7 @@ function Contrato({ userId }) {
                       id="valorPagado"
                       value={valorPagado}
                       onChange={(e) => setValorPagado(e.target.value)}
-                      className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                      className="bg-white text-gray-900 shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
                       disabled
                     />
                   </div>
@@ -273,7 +273,7 @@ function Contrato({ userId }) {
                         id="metodoPago"
                         value={metodoPago}
                         onChange={(e) => setMetodoPago(e.target.value)}
-                        className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"
+                        className="bg-white text-gray-900 shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"
                       >
                         <option value="" >Selecciona un método de pago</option>
                         <option value="nequi">Nequi</option>
@@ -288,7 +288,7 @@ function Contrato({ userId }) {
                     >
                       Fecha de Pago
                     </label>
-                    <input type="text" readOnly value={fechaPago} className="shadow appearance-none border rounded w-full py-2 px-3 text-gray-700 leading-tight focus:outline-none focus:shadow-outline"/>                  </div>
+                    <input type="text" readOnly value={fechaPago} className="bg-white text-gray-900 shadow appearance-none border rounded w-full py-2 px-3 leading-tight focus:outline-none focus:shadow-outline"/>                  </div>
                   <button
                     onClick={handleRegistrarPago}
                     className="bg-green-500 text-white px-4 py-2 rounded hover:bg-green-700 focus:outline-none focus:shadow-outline"

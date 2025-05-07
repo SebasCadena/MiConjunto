@@ -18,61 +18,69 @@ const PagosTotales = () => {
 
   const obtenerPagos = async () => {
     try {
-      // Obtener todos los contratos
+      const cobrosSnapshot = await getDocs(collection(db, 'cobros'));
+      const cobrosData = cobrosSnapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data()
+      }));
+
       const contratosSnapshot = await getDocs(collection(db, 'contratos'));
       const contratosData = contratosSnapshot.docs.map(doc => ({
         id: doc.id,
         ...doc.data()
       }));
 
-      
-      // Crear un objeto para mapear contratos por id
       const contratosMap = {};
       contratosData.forEach(contrato => {
         contratosMap[contrato.id] = contrato;
       });
 
-      // Obtener todos los pagos
-      const querySnapshot = await getDocs(collection(db, 'pagos'));
-      const pagosData = querySnapshot.docs.map(doc => ({
-        id: doc.id,
-        ...doc.data()
-      }));
-
-      console.log('pagosData:', pagosData);
-      pagosData.forEach(pago => { // Iterar sobre cada pago y rellenar los campos faltantes
-        const contrato = contratosMap[pago.num_contrato];
-        if (contrato) {
-          pago.valor = contrato.valor_apartamento;
-          pago.nombre_inquilino = contrato.nombre_inquilino;
-          pago.codigo_apartamento = contrato.codigo_apartamento;
+      let allPagos = [];
+      for (const cobro of cobrosData) {
+        if (cobro.id_pago !== null) {
+          const contrato = contratosMap[cobro.contratoId];
+          if (contrato) {
+            const pago = {
+              id: cobro.cobroID, // Usar el cobroID como id
+              fecha_pago: cobro.fecha_pago,
+              valor: cobro.montoPagado,
+              nombre_inquilino: contrato.nombre_inquilino,
+              codigo_apartamento: contrato.codigo_apartamento,
+               metodo_pago: cobro.metodoPago,
+            };
+            allPagos.push(pago);
+          }
+        
         }
-        console.log('pago modificado:', pago);
-      });
-      setPagos(pagosData);
+          
+      }
+
+       console.log('allPagos:', allPagos);
+      
+      setPagos(allPagos);
     } catch (error) {
       console.error('Error al obtener los pagos:', error);
-    }
+    } 
   };
 
   const filtrarPagos = () => {
     let pagosFiltrados = [...pagos];
-    console.log('filtroFecha:',filtroFecha);
+    console.log('filtroFecha:', filtroFecha);
 
     if (filtroFecha) {
-      pagosFiltrados = pagosFiltrados.filter(pago => {       
-        if(pago.fecha_pago && typeof pago.fecha_pago.toDate === 'function'){
+      pagosFiltrados = pagosFiltrados.filter(pago => {
+        if (pago.fecha_pago && typeof pago.fecha_pago.toDate === 'function') {
           const fechaPago = pago.fecha_pago.toDate().toISOString().slice(0, 10);
           return fechaPago === filtroFecha;
         }
         return false;
       });
-    }else {
-        pagosFiltrados = pagosFiltrados;
+    } else {
+      pagosFiltrados = pagosFiltrados;
     }
 
     if (filtroInquilino) {
-      pagosFiltrados = pagosFiltrados.filter(pago => {
+        pagosFiltrados = pagosFiltrados.filter(pago => {
         if(pago.nombre_inquilino){
           return pago.nombre_inquilino.toLowerCase().includes(filtroInquilino.toLowerCase())
         }
@@ -81,13 +89,14 @@ const PagosTotales = () => {
     }
 
     if (filtroApartamento) {
-      pagosFiltrados = pagosFiltrados.filter(pago => {
+        pagosFiltrados = pagosFiltrados.filter(pago => {
         if(pago.codigo_apartamento){
           return pago.codigo_apartamento.toLowerCase().includes(filtroApartamento.toLowerCase())
         } 
-        return false;
+       return false;
+        
       }); 
-    }   console.log('pagosFiltrados:',pagosFiltrados);
+    }   console.log('pagosFiltrados:', pagosFiltrados);
 
     setPagosFiltrados(pagosFiltrados);
   };
@@ -116,11 +125,12 @@ const PagosTotales = () => {
         <thead>
           <tr className="bg-gray-100">
             <th className="py-2 px-4 border-b">Fecha</th>
-            <th className="py-2 px-4 border-b">Valor</th>
+             <th className="py-2 px-4 border-b">Valor</th>
             <th className="py-2 px-4 border-b">Inquilino</th>
-            <th className="py-2 px-4 border-b">Apartamento</th>
-            <th className="py-2 px-4 border-b">Factura</th>
+            <th className="py-2 px-4 border-b">Apartamento</th>            
+             <th className="py-2 px-4 border-b">Método de Pago</th>
           </tr>
+        
         </thead>
         <tbody>
           {pagosFiltrados.map(pago => (
@@ -131,7 +141,8 @@ const PagosTotales = () => {
               <td className="py-2 px-4 border-b">{pago.valor}</td>   
               <td className="py-2 px-4 border-b">{pago.nombre_inquilino}</td> 
               <td className="py-2 px-4 border-b">{pago.codigo_apartamento}</td>
-              <td className="py-2 px-4 border-b">{pago.num_factura}</td>
+               <td className="py-2 px-4 border-b">{pago.metodo_pago}</td>
+          
             </tr>
           ))}
         </tbody>

@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { db, auth } from "./firebaseConfig"; // Importa la configuración de Firebase
 import { collection, doc, setDoc, getDocs, deleteDoc, updateDoc } from "firebase/firestore"; // Para Firestore
+import NotificacionesDueño from "./vistas/notificacionesDueño";
 import { createUserWithEmailAndPassword, deleteUser, signOut } from "firebase/auth"; // Para Authentication
 
 
@@ -249,6 +250,13 @@ const PanelDueño = () => {
             Pagos
         </button>
 
+        <button
+            onClick={() => setVistaActiva("notificacionesDueño")}
+            className={`py-2 px-4 rounded ${vistaActiva === "notificacionesDueño" ? "bg-blue-200" : "bg-blue-100"} hover:bg-blue-200`}
+          >
+            Notificaciones
+        </button>
+
           
           </nav>
         <button
@@ -285,6 +293,7 @@ const PanelDueño = () => {
         {vistaActiva === "ingresos" && <Ingresos />}
         {vistaActiva === "historial" && <Historial />}
         {vistaActiva === "pagosTotales" && <PagosTotales />}
+        {vistaActiva === "notificacionesDueño" && <NotificacionesDueño/>}
 
 
 
