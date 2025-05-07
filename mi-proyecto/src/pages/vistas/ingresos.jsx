@@ -39,11 +39,58 @@ const Ingresos = () => {
   const [datasetByYear, setDatasetByYear] = useState([]);
   const [paymentMethodsData, setPaymentMethodsData] = useState([]);
   const [datasetByMetodo, setDatasetByMetodo] = useState([]);
-  const [apartmentsData, setApartmentsData] = useState([]); // Estado para la ocupación de apartamentos
+  const [apartmentsData, setApartmentsData] = useState([]);
+  const [cobrosData, setCobrosData] = useState([]);
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
   const [availableYears, setAvailableYears] = useState([]);
 
   useEffect(() => {
+    const fetchCobros = async () => {
+      try {
+        const cobrosSnapshot = await getDocs(collection(db, "cobros"));
+        const cobros = cobrosSnapshot.docs.map((doc) => doc.data());
+
+        const mesesOrdenados = [
+          "enero",
+          "febrero",
+          "marzo",
+          "abril",
+          "mayo",
+          "junio",
+          "julio",
+          "agosto",
+          "septiembre",
+          "octubre",
+          "noviembre",
+          "diciembre",
+        ];
+
+        const cobrosPorMes = cobros.reduce(
+          (acc, cobro) => {
+            const mes = mesesOrdenados[cobro.mesCorrespondiente - 1]; // Convertir número de mes a nombre
+            acc[mes] = acc[mes] || { totalCobros: 0, totalPagados: 0 };
+
+            acc[mes].totalCobros += 1; // Contar todos los cobros
+            if (cobro.id_pago) {
+              acc[mes].totalPagados += 1; // Contar los cobros con pago realizado
+            }
+            return acc;
+          },
+          {}
+        );
+
+        const dataset = mesesOrdenados.map((mes) => ({
+          month: mes.charAt(0).toUpperCase() + mes.slice(1),
+          cobros: cobrosPorMes[mes]?.totalCobros || 0,
+          pagados: cobrosPorMes[mes]?.totalPagados || 0,
+        }));
+
+        setCobrosData(dataset);
+      } catch (error) {
+        console.error("Error al obtener los datos de cobros:", error);
+      }
+    };
+
     const fetchPagos = async () => {
       try {
         const pagosSnapshot = await getDocs(collection(db, "pagos"));
@@ -153,6 +200,7 @@ const Ingresos = () => {
 
     fetchPagos();
     fetchApartments();
+    fetchCobros();
   }, [selectedYear]);
 
   return (
@@ -201,7 +249,7 @@ const Ingresos = () => {
           />
         </div>
 
-        {/* Tarjeta de métodos de pago (diagrama de pastel) */}
+        {/* Tarjeta de métodos de pago */}
         <div className="p-6 bg-gray-50 rounded-lg shadow">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Métodos de Pago</h2>
           <div className="flex justify-center items-center">
@@ -220,7 +268,7 @@ const Ingresos = () => {
           </div>
         </div>
 
-        {/* Tarjeta de dinero por método de pago (gráfico de barras) */}
+        {/* Tarjeta de dinero por método de pago */}
         <div className="p-6 bg-gray-50 rounded-lg shadow">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Dinero por Método de Pago</h2>
           {datasetByMetodo.length > 0 ? (
@@ -234,16 +282,14 @@ const Ingresos = () => {
             <p className="text-gray-500 text-sm">Cargando datos...</p>
           )}
         </div>
-
-        
       </div>
 
-      <br></br>
-      <h1 className="text-xl font-bold text-gray-800 mb-3">Resumen de Ocupacion</h1>
-        <p className="text-gray-600 mb-4 text-sm">Consulta los ingresos generados por año y mes.</p>
+      <br />
+      <h1 className="text-xl font-bold text-gray-800 mb-3">Resumen de Ocupación</h1>
+      <p className="text-gray-600 mb-4 text-sm">Consulta los ingresos generados por año y mes.</p>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">    
-        {/* Tarjeta de ocupación de apartamentos (diagrama de pastel) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+        {/* Tarjeta de ocupación de apartamentos */}
         <div className="p-6 bg-gray-50 rounded-lg shadow">
           <h2 className="text-lg font-semibold text-gray-800 mb-4">Ocupación de Apartamentos</h2>
           <div className="flex justify-center items-center">
@@ -262,34 +308,22 @@ const Ingresos = () => {
           </div>
         </div>
 
-        {/* Tarjeta de métodos de pago (diagrama de pastel) */}
+        {/* Nueva gráfica: Cobros pendientes vs pagos */}
         <div className="p-6 bg-gray-50 rounded-lg shadow">
-          <h2 className="text-lg font-semibold text-gray-800 mb-4">Métodos de Pago</h2>
-          <div className="flex justify-center items-center">
-            <PieChart
-              series={[
-                {
-                  data: paymentMethodsData,
-                  innerRadius: 80,
-                },
-              ]}
-              width={250}
-              height={250}
-            >
-              <PieCenterLabel>Métodos</PieCenterLabel>
-            </PieChart>
-          </div>
+          <h2 className="text-lg font-semibold text-gray-800 mb-4">Cobros Pendientes vs Pagos</h2>
+          <BarChart
+            dataset={cobrosData}
+            xAxis={[{ dataKey: "month" }]}
+            series={[
+              { dataKey: "cobros", label: "Cant. de Cobros" },
+              { dataKey: "pagados", label: "Cant. Pagados" },
+            ]}
+            {...chartSetting}
+          />
         </div>
       </div>
-
     </div>
-
-
   );
-
-
-
-  
 };
 
 export default Ingresos;
