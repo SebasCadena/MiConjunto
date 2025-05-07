@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { db } from "../firebaseConfig";
+import { db } from "../firebaseConfig.js";
+import { generar_cobros, agregarCobros, getContratos, actualizarEstadoCobros } from "../../utils.jsx";
 import {
   collection,
   getDocs,
@@ -10,6 +11,8 @@ import {
   Timestamp,
   query,
   where,
+  onSnapshot, 
+  orderBy,
 } from "firebase/firestore";
 
 export default function Contratos() {
@@ -17,15 +20,20 @@ export default function Contratos() {
   const [inquilinos, setInquilinos] = useState([]);
   const [contratos, setContratos] = useState([]); // Estado para almacenar los contratos
   const [codigoApartamento, setCodigoApartamento] = useState("");
+  const [idContrato, setIdContrato] = useState("");
   const [valorApartamento, setValorApartamento] = useState("");
   const [idInquilino, setIdInquilino] = useState("");
   const [nombreInquilino, setNombreInquilino] = useState("");
   const [frecuencia, setFrecuencia] = useState("mensual");
   const [fechaInicio, setFechaInicio] = useState("");
-  const [fechaFin, setFechaFin] = useState("");
+  const [mesesContrato, setMesesContrato] = useState("");
+  
 
   useEffect(() => {
-    const obtenerDatos = async () => {
+    const obtenerDatos = async () => {      
+      const contratosData = await getContratos();
+      setContratos(contratosData);
+
       try {
         // Obtener apartamentos
         const aptoSnapshot = await getDocs(
@@ -51,41 +59,75 @@ export default function Contratos() {
         console.log("Inquilinos:", inquilinosData);
         setInquilinos(inquilinosData);
 
-        // Obtener contratos
-        const contratoSnapshot = await getDocs(collection(db, "contratos"));
-        const contratosData = contratoSnapshot.docs
-          .map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }))
-          .filter((contrato) => contrato.activo === true);
-        console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
+       console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
         setContratos(contratosData);
       } catch (error) {
         console.error("Error al obtener datos:", error);
       }
     };
 
+
     obtenerDatos();
+
+    actualizarEstadoCobros();
+
+    // Configurar listener en tiempo real para la colección 'cobros'
+    const unsubscribe = onSnapshot(collection(db, "cobros"), () => {
+      // Llamar a getContratos() para actualizar la lista de contratos
+      getContratos().then(contratosData => {
+        setContratos(contratosData);        
+      });
+    });
+    return () => unsubscribe();
   }, []);
 
-  const guardarContrato = async () => {
-    if (!codigoApartamento || !idInquilino || !frecuencia || !fechaInicio || !fechaFin) {
+  const añadirContratoFunction = async () => {
+    if (!codigoApartamento || !idInquilino || !frecuencia || !fechaInicio || !mesesContrato) {
       alert("Por favor, completa todos los campos antes de guardar.");
       return;
     }
 
+    if (isNaN(Number(mesesContrato)) || mesesContrato <= 0) {
+      alert("Por favor, ingrese una cantidad de meses válida.");
+      return;
+    }
+    
     try {
+      const fechaInicioDate = new Date(fechaInicio);
+      const fechaFinCalculada = new Date(fechaInicioDate);
+      fechaFinCalculada.setMonth(fechaInicioDate.getMonth() + Number(mesesContrato));
+
+
+      let contrato = {}
+      let cobrosAGuardar = [];
+
       // Guardar contrato en Firestore
+
       await addDoc(collection(db, "contratos"), {
         codigo_apartamento: codigoApartamento,
         valor_apartamento: valorApartamento,
         id_inquilino: idInquilino,
         nombre_inquilino: nombreInquilino,
         frecuencia,
-        fecha_inicio: Timestamp.fromDate(new Date(fechaInicio)),
-        fecha_fin: Timestamp.fromDate(new Date(fechaFin)),
+        fecha_inicio: Timestamp.fromDate(fechaInicioDate),
+        fecha_fin: Timestamp.fromDate(fechaFinCalculada),
         activo: true,
+      }).then((docRef) => {
+        // Accede al ID generado aquí        
+         contrato = {
+          id_contrato: docRef.id,
+          codigo_apartamento: codigoApartamento,
+          valor_apartamento: valorApartamento,
+          id_inquilino: idInquilino,
+          nombre_inquilino: nombreInquilino,
+          frecuencia,
+          fecha_inicio: Timestamp.fromDate(fechaInicioDate),
+          fecha_fin: Timestamp.fromDate(fechaFinCalculada),
+          activo: true,
+        }
+        cobrosAGuardar = generar_cobros(contrato);
+        agregarCobros(cobrosAGuardar);
+
       });
 
       // Actualizar estado del apartamento a ocupado
@@ -99,7 +141,7 @@ export default function Contratos() {
       setNombreInquilino("");
       setFrecuencia("mensual");
       setFechaInicio("");
-      setFechaFin("");
+      setMesesContrato("");      
     } catch (error) {
       console.error("Error al guardar el contrato:", error);
       alert("Hubo un error al guardar el contrato.");
@@ -110,7 +152,7 @@ export default function Contratos() {
     try {
       // 1. Obtener el contrato para acceder al código del apartamento
       const contratoRef = doc(db, "contratos", idContrato);
-      const contratoSnap = await getDoc(contratoRef);
+      const contratoSnap = await getDoc(contratoRef);      
       const contratoData = contratoSnap.data();
       const codigoApartamento = contratoData.codigo_apartamento; // Cambio de nombre de variable
 
@@ -122,16 +164,10 @@ export default function Contratos() {
       await updateDoc(apartamentoRef, { ocupacion: false });
 
 
-      // Actualizar el estado local para refrescar la vista
-      setContratos(contratos.map(contrato => {
-        if (contrato.id === idContrato) {
-          return {
-            ...contrato,
-            activo: false,
-          };
-        }
-        return contrato;
-      }).filter(contrato => contrato.activo === true));
+      // Actualizar la lista de contratos
+      const contratosData = await getContratos();
+      setContratos(contratosData);
+      
 
       alert("Contrato finalizado exitosamente.");
     } catch (error) {
@@ -140,12 +176,11 @@ export default function Contratos() {
     }
   };
 
-
   return (
     <div className="p-6 max-w-lg mx-auto bg-cyan-100 rounded-lg">
       <h2 className="text-center text-lg font-semibold mb-4">Añadir / Modificar Contrato</h2>
 
-      {/* Selector de apartamentos */}
+      {/* Selector de apartamentos */}      
       <div className="flex gap-2 mb-4">
         <button className="bg-blue-400 text-white px-4 py-2 rounded w-1/3">Asignar Apto</button>
         <select
@@ -212,25 +247,29 @@ export default function Contratos() {
         </select>
       </div>
 
-      {/* Fechas */}
-      <div className="flex gap-2">
-        <input
-          type="date"
-          className="bg-white p-2 rounded w-1/2"
-          value={fechaInicio}
-          onChange={(e) => setFechaInicio(e.target.value)}
-        />
-        <input
-          type="date"
-          className="bg-white p-2 rounded w-1/2"
-          value={fechaFin}
-          onChange={(e) => setFechaFin(e.target.value)}
-        />
+       {/* Fechas y meses*/}
+       <div className="flex gap-2 mb-4 items-center">
+        <div className="w-1/2">
+          <label htmlFor="fechaInicio" className="block text-sm font-medium text-gray-700">
+            Fecha Inicio
+          </label>
+          <input
+            type="date"
+            id="fechaInicio"
+            className="mt-1 p-2 border border-gray-300 rounded w-full"
+            value={fechaInicio}
+            onChange={(e) => setFechaInicio(e.target.value)}
+          />
+        </div>
+        <div className="w-1/2">
+          <label className="block text-sm font-medium text-gray-700">Meses Contrato</label>
+          <input type="number" className="mt-1 p-2 border border-gray-300 rounded w-full" value={mesesContrato} onChange={(e) => setMesesContrato(e.target.value)}/>
+        </div>
       </div>
 
       {/* Botón para guardar */}
       <div className="mt-6 text-center">
-        <button onClick={guardarContrato} className="bg-green-500 text-white px-6 py-2 rounded">
+        <button onClick={añadirContratoFunction} className="bg-green-500 text-white px-6 py-2 rounded">
           Guardar Contrato
         </button>
       </div>
@@ -253,8 +292,7 @@ export default function Contratos() {
                   <p>Frecuencia: {contrato.frecuencia}</p>
                   <p>
                     Fechas: {contrato.fecha_inicio.toDate().toLocaleDateString()} -{" "}
-                    {contrato.fecha_fin.toDate().toLocaleDateString()}
-                  </p>
+                  </p>                  
                   {/* Aquí podrías mostrar más detalles del contrato si es necesario */}
                 </div>
                 <div className="flex space-x-2">
@@ -265,6 +303,7 @@ export default function Contratos() {
                     Finalizar Contrato
                   </button>
                   {/* Otros botones o acciones aquí */}
+                    
                 </div>
               </li>
             ))}
