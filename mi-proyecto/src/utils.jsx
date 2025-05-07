@@ -1,4 +1,10 @@
 import { Timestamp, collection, addDoc, getDocs, query, where, updateDoc, doc, getDoc } from "firebase/firestore";
+import emailjs from '@emailjs/browser';
+
+// Inicializar emailjs si no está inicializado globalmente. Reemplaza con tu Public Key
+
+
+
 import { db } from "./pages/firebaseConfig";
 
 function generar_cobros(contrato_data) {
@@ -127,7 +133,7 @@ async function actualizarEstadoCobros() {
   }
 }
 
-async function registrarPago(id_cobro, valor_pagado, metodo_pago) {
+async function registrarPago(id_cobro, valor_pagado, metodo_pago) {  
   const fechaActual = new Date();// Obtener la fecha actual
   try {
     // Crear un nuevo documento en la colección 'pagos'
@@ -155,9 +161,62 @@ async function registrarPago(id_cobro, valor_pagado, metodo_pago) {
       id_pago: id_pago,
       estado: "Pagado",
     });
+    
+    // --- Iniciar lógica para enviar correo ---
+
+    // 1. Obtener el cobro para obtener el inquilinoID, mesCorrespondiente y añoCorrespondiente
+    
+    const inquilinoID = cobro.inquilinoID;
+
+    // 2. Obtener el email del inquilino
+    const inquilinoRef = doc(db, 'users', inquilinoID);
+    const inquilinoSnap = await getDoc(inquilinoRef);
+    const inquilino = inquilinoSnap.data();
+    const inquilinoEmail = inquilino.email;
+    const inquilinoNombre = inquilino.nombre; // También obtenemos el nombre para personalizar el saludo
+
+    // 3. Preparar templateParams para emailjs
+    const templateParams = {
+      to_email: inquilinoEmail,
+      to_name: inquilinoNombre, // Nombre del inquilino para el saludo
+      monto_pagado: valor_pagado,
+      metodo_pago: metodo_pago,
+      fecha_pago: fechaActual.toLocaleDateString(), // Formatear la fecha
+      mes_correspondiente: `${cobro.mesCorrespondiente}/${cobro.añoCorrespondiente}`, // Mes y año del cobro
+    };
+
+    // 4. Enviar el correo (Necesitaremos el Service ID y el Template ID de la nueva plantilla)    
+    await emailjs.send('service_7n1h9xn', 'template_qr0zw0k', templateParams, 'VkLV1s9U7qcNQGxWf');
+
+    console.log("Correo de confirmación de pago enviado a:", inquilinoEmail);
+
+    // --- Fin de la lógica para enviar correo ---
   } catch (error) {
     console.error("Error al registrar el pago:", error);
   }
 }
 
-export { generar_cobros, agregarCobros, getContratos, actualizarEstadoCobros, registrarPago };
+
+async function crearNotificacion(notificacionData) {
+  console.log("Intentando crear notificacion...");
+  try {
+    const fechaActual = new Date(); // Obtener la fecha actual
+    const fechaTimestamp = Timestamp.fromDate(fechaActual); // Crear un Timestamp
+
+    console.log("Datos a guardar en Firestore:", { ...notificacionData, fecha: fechaTimestamp, leido: false });
+
+    await addDoc(collection(db, "notificaciones"), {
+      ...notificacionData, // Agregar todos los campos de notificacionData
+      fecha: fechaTimestamp,
+      leido: false, // Agregar el campo leido con valor false
+    });
+
+    console.log("Llamada a addDoc completada.");
+  } catch (error) {
+    console.error("Error capturado en crearNotificacion:", error);
+    console.error("Error al crear la notificación:", error);
+  }
+}
+
+
+export { generar_cobros, agregarCobros, getContratos, actualizarEstadoCobros, registrarPago, crearNotificacion };
