@@ -11,7 +11,7 @@ const valueFormatter = (value) => `$${value}`;
 const chartSetting = {
   yAxis: [
     {
-      label: "Monto Pagado ($)",
+      label: "Cant. Contratos",
       width: 50,
     },
   ],
