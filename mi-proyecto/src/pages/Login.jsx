@@ -58,7 +58,7 @@ const Login = () => {
         <div className="flex rounded-lg shadow-lg w-full sm:w-3/4 lg:w-1/2 bg-white sm:mx-0">
           <div className="flex flex-col w-full md:w-1/2 p-4">
             <div className="flex flex-col flex-1 justify-center mb-8">
-              <h1 className="text-4xl text-center font-thin">Iniciar sesión</h1>
+              <h1 className="text-4xl text-center pt-5 font-bold">Iniciar sesión</h1>
               <div className="w-full mt-4">
                 <form onSubmit={handleLogin} className="w-full mt-4">
                   <div className="flex flex-col mt-4">
@@ -113,7 +113,7 @@ const Login = () => {
             </div>
             
           </div>
-          <div className="hidden md:block md:w-1/2 rounded-r-lg">
+          <div className="hidden md:block md:w-1/2 rounded-r-lg content-center">
       <img
       src="src/img/logo/LOGO_MI_CONJUNTO.png"
       className=""
