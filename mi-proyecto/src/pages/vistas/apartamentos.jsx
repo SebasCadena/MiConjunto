@@ -118,14 +118,14 @@ const Apartamentos = () => {
 
   return (
     <div>
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">
+      <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <h1 className="text-xl md:text-2xl font-bold w-full md:w-auto text-center md:text-left">
           Gestión de Apartamentos{" "}
-          <span className="text-gray-500 text-lg">({apartamentos.length} registrados)</span>
+          <span className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">({apartamentos.length} registrados)</span>
         </h1>
         <button
           onClick={toggleInactivos}
-          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600"
+          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full sm:w-auto"
         >
           {mostrarInactivos ? "Mostrar Activos" : "Mostrar Inactivos"}
         </button>
@@ -134,7 +134,7 @@ const Apartamentos = () => {
             setMostrarFormulario(true);
             setEditandoApartamento(null); // Asegurarse de que no esté en modo edición
           }}
-          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 w-full sm:w-auto"
         >
           Añadir Apartamento
         </button>
@@ -149,52 +149,63 @@ const Apartamentos = () => {
       {/* Lista de apartamentos */}
       <div>
         {apartamentos.length === 0 ? (
-          <p className="text-gray-600">No hay apartamentos registrados.</p>
+            <p className="text-gray-600 text-center">No hay apartamentos registrados.</p>
         ) : (
-          <div className="space-y-4">
-            {apartamentos.map((apto) => (
-              <div
-                key={apto.id}
-                className="flex items-center justify-between p-4 bg-gray-100 rounded-lg shadow"
-              >
-                {/* Indicador de estado */}
-                <div className="flex items-center space-x-4">
+            <div className="space-y-4">
+              {apartamentos.map((apto) => (
                   <div
-                    className={`w-4 h-4 rounded-full ${
-                      apto.ocupacion ? "bg-blue-500" : "bg-green-500"
-                    }`}
-                    title={apto.ocupacion ? "Ocupado" : "Disponible"}
-                  ></div>
-                  <div>                    
-                    <p className="font-bold text-lg">{apto.codigo} - {apto.activo ? <b>Activo</b> : <b>Inactivo</b>}</p>
-                    <p className="text-gray-600 text-sm">{apto.direccion}</p>
+                      key={apto.id}
+                      className="flex flex-col sm:flex-row items-start sm:items-center justify-between p-3 sm:p-4 bg-gray-100 rounded-lg shadow gap-3 sm:gap-4"
+                  >
+                    {/* Indicador de estado y detalles */}
+                    <div className="flex items-start space-x-3 w-full sm:w-auto">
+                      <div
+                          className={`w-4 h-4 mt-1 rounded-full flex-shrink-0 ${
+                              apto.ocupacion ? "bg-blue-500" : "bg-green-500"
+                          }`}
+                          title={apto.ocupacion ? "Ocupado" : "Disponible"}
+                      ></div>
+                      <div className="min-w-0 flex-1">
+                        <p className="font-bold text-base sm:text-lg break-words">
+                          {apto.codigo} - {apto.activo ? (
+                            <span className="text-green-600">Activo</span>
+                        ) : (
+                            <span className="text-red-600">Inactivo</span>
+                        )}
+                        </p>
+                        <p className="text-gray-600 text-sm break-words">{apto.direccion}</p>
+                      </div>
+                    </div>
+
+                    {/* Valor y acciones */}
+                    <div className="flex flex-row items-center justify-between sm:justify-end w-full sm:w-auto gap-4 mt-2 sm:mt-0">
+                      <p className="text-gray-800 font-semibold text-sm sm:text-base">
+                        ${apto.valor.toLocaleString()}
+                      </p>
+                      <div className="flex gap-4">
+                        <button
+                            onClick={() => {
+                              setMostrarFormulario(true);
+                              setEditandoApartamento(apto);
+                              setNuevoApartamento(apto);
+                            }}
+                            className="text-blue-500 hover:text-blue-700 p-1"
+                            title="Editar"
+                        >
+                          ✏️
+                        </button>
+                        <button
+                            onClick={() => eliminarApartamento(apto.codigo)}
+                            className="text-red-500 hover:text-red-700 p-1"
+                            title="Eliminar"
+                        >
+                          {mostrarInactivos ? '🔄' : '🗑️'}
+                        </button>
+                      </div>
+                    </div>
                   </div>
-                </div>
-                {/* Valor y acciones */}
-                <div className="flex items-center space-x-6">
-                  <p className="text-gray-800 font-semibold">${apto.valor.toLocaleString()}</p>
-                  <button
-                    onClick={() => {
-                      setMostrarFormulario(true);
-                      setEditandoApartamento(apto);
-                      setNuevoApartamento(apto);
-                    }}
-                    className="text-blue-500 hover:text-blue-700"
-                    title="Editar"
-                  >
-                    ✏️
-                  </button>
-                  <button
-                    onClick={() => eliminarApartamento(apto.codigo)}
-                    className="text-red-500 hover:text-red-700"
-                    title="Eliminar"
-                  >
-                    {mostrarInactivos ? 'Reactivar 🔄' : 'Eliminar 🗑️'}
-                  </button>
-                </div>
-              </div>
-            ))}
-          </div>
+              ))}
+            </div>
         )}
       </div>
 

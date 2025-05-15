@@ -177,7 +177,7 @@ export default function Contratos() {
   };
 
   return (
-    <div className="p-6 max-w-lg mx-auto bg-cyan-100 rounded-lg">
+    <div className="p-2 max-w-lg mx-auto bg-cyan-100 rounded-lg">
       <h2 className="text-center text-lg font-semibold mb-4">Añadir / Modificar Contrato</h2>
 
       {/* Selector de apartamentos */}      
