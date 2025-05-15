@@ -89,37 +89,36 @@ const Notificaciones = ({ userId }) => {
   }
 
   return (
-    <div className="p-6">
+    <div className="p-2">
       <h1 className="text-2xl font-bold mb-6">Mis Notificaciones</h1>
-      <div className="mt-8">
-        <table className="min-w-full bg-white shadow-md rounded">
-          <thead>
-            <tr className="bg-gray-200">
-              <th className="px-4 py-2">Categoría</th>
-              <th className="px-4 py-2">Título</th>
-              <th className="px-4 py-2">Mensaje</th>
-              <th className="px-4 py-2">Prioridad</th>
-            </tr>
-          </thead>
-          <tbody>
-            {notificaciones.map((notificacion) => (
-              <tr key={notificacion.id} className="border-b border-gray-200">
-                  <td className="px-4 py-2">
-                  <span
-                    className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeClass(notificacion.categoria).classes}`}
-                 
-
-                  >
-                    {notificacion.categoria}
-                  </span>
-                </td>                <td className="px-4 py-2">{notificacion.titulo}</td>
-                <td className="px-4 py-2 ">{notificacion.mensaje}</td>
-                <td className="px-4 py-2 ">{notificacion.prioridad}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
+      <div className="mt-8 overflow-x-auto"> {/* Added overflow-x-auto here */}
+  <table className="min-w-full bg-white shadow-md rounded ">
+    <thead>
+      <tr className="bg-gray-200">
+        <th className="px-4 py-2 text-left">Categoría</th> {/* Added text-left */}
+        <th className="px-4 py-2 text-left">Título</th> {/* Added text-left */}
+        <th className="px-4 py-2 text-left">Mensaje</th> {/* Added text-left */}
+        <th className="px-4 py-2 text-left">Prioridad</th> {/* Added text-left */}
+      </tr>
+    </thead>
+    <tbody>
+      {notificaciones.map((notificacion) => (
+        <tr key={notificacion.id} className="border-b border-gray-200">
+          <td className="px-4 py-2">
+            <span
+              className={`inline-flex items-center px-2 py-1 text-xs font-semibold rounded-full ${getCategoryBadgeClass(notificacion.categoria).classes}`}
+            >
+              {notificacion.categoria}
+            </span>
+          </td>
+          <td className="px-4 py-2">{notificacion.titulo}</td>
+          <td className="px-4 py-2">{notificacion.mensaje}</td>
+          <td className="px-4 py-2">{notificacion.prioridad}</td>
+        </tr>
+      ))}
+    </tbody>
+  </table>
+</div>
     </div>
   );
 };
