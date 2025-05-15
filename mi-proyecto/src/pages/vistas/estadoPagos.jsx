@@ -106,18 +106,18 @@ const EstadoPagos = () => {
   };
 
   return (
-    <div className="p-6 bg-gray-100 min-h-screen">
-      <header className="flex justify-between items-center mb-6">
-        <h1 className="text-2xl font-bold">
+    <div className="">
+      <header className="flex flex-col md:flex-row justify-between items-center gap-4 mb-6">
+        <h1 className="text-xl md:text-2xl font-bold w-full md:w-auto text-center md:text-left">
           Gestión de Zonas Comunes{" "}
-          <span className="text-gray-500 text-lg">({zonasComunes.length} registradas)</span>
+          <span className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">({zonasComunes.length} registradas)</span>
         </h1>
         <button
           onClick={() => {
             setMostrarFormulario(true);
             setEditandoZona(null); // Asegurarse de que no esté en modo edición
           }}
-          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 w-full sm:w-auto"
         >
           Añadir Zona Común
         </button>

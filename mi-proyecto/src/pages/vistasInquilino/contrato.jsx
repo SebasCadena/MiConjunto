@@ -133,7 +133,7 @@ function Contrato({ userId }) {
   }
 
   return (
-    <div className="p-8">
+    <div className="p-2">
       <div>
         <div className="text-center mb-8">
           <h1 className="text-3xl font-bold text-teal-700">Villa Campestre</h1>
@@ -201,9 +201,9 @@ function Contrato({ userId }) {
                 <div>
                   <p>
                     {cobro.mesCorrespondiente === mesActual ? (
-                      <span className="font-bold">Mes Actual - </span>
+                      <h2 className="font-bold">Mes Actual </h2>
                     ) : (
-                      <span>Mes: </span>
+                      <span></span>
                     )}
                     Mes: {cobro.mesCorrespondiente} - Año:{" "}
                     {cobro.añoCorrespondiente}
@@ -221,7 +221,7 @@ function Contrato({ userId }) {
                   </button>
                 )}
                 {cobro.estado === "Pagado" && (
-                  <div>
+                  <div className="pl-5">
                     <p>Valor pagado: ${cobro.valor_pagado}</p>
                     <p>Metodo pago: {cobro.metodo_pago}</p>
                     <p>
