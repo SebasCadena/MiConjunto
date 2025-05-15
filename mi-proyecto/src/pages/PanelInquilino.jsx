@@ -42,6 +42,7 @@ const PanelInquilino = ({ userId }) => {
   const [cantidadPagosPendientes, setCantidadPagosPendientes] = useState(0);
   const [showNotificationsMenu, setShowNotificationsMenu] = useState(false);
   const [notificacionesNoLeidas, setNotificacionesNoLeidas] = useState([]);
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Nuevo estado para el sidebar
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Estado para controlar el menú desplegable
   const dropdownRef = useRef(null); // Referencia al menú desplegable
@@ -50,6 +51,9 @@ const PanelInquilino = ({ userId }) => {
   const menuRef = useRef(null);
 
   const toggleDropdown = () => {
+    // Cierra el sidebar si está abierto al abrir el dropdown
+    if (isSidebarOpen) setIsSidebarOpen(false);
+
     setIsDropdownOpen(!isDropdownOpen); // Alterna entre mostrar y ocultar el menú
   };
 
@@ -57,6 +61,12 @@ const PanelInquilino = ({ userId }) => {
     if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
       setIsDropdownOpen(false); // Cierra el menú si se hace clic fuera de él
     }
+  };
+
+  // Función para alternar la visibilidad del sidebar
+  const toggleSidebar = () => {
+    console.log("toggleSidebar called");
+    setIsSidebarOpen(!isSidebarOpen);
   };
 
   useEffect(() => {
@@ -157,6 +167,17 @@ const PanelInquilino = ({ userId }) => {
     };
   }, []);
 
+  useEffect(() => {
+    // Cierra el sidebar cuando el tamaño de la pantalla es mayor que 'sm'
+    const handleResize = () => {
+      if (window.innerWidth >= 640 && isSidebarOpen) {
+        setIsSidebarOpen(false);
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [isSidebarOpen]);
+
   const cerrarSesion = async () => {
     try {
       await signOut(auth);
@@ -179,11 +200,9 @@ const PanelInquilino = ({ userId }) => {
           <div className="flex items-center justify-between">
             <div className="flex items-center justify-start rtl:justify-end">
               <button
-                data-drawer-target="logo-sidebar"
-                data-drawer-toggle="logo-sidebar"
-                aria-controls="logo-sidebar"
+                onClick={toggleSidebar} // Llama a la función para alternar el sidebar
                 type="button"
-                className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600"
+                className="inline-flex items-center p-2 text-sm text-gray-500 rounded-lg sm:hidden hover:bg-gray-100 focus:outline-none focus:ring-2 focus:ring-gray-200 dark:text-gray-400 dark:hover:bg-gray-700 dark:focus:ring-gray-600" // Clases de Tailwind
               >
                 <span className="sr-only">Open sidebar</span>
                 <svg
@@ -212,8 +231,8 @@ const PanelInquilino = ({ userId }) => {
               </a>
             </div>
 
-            <div className="flex items-center content-center ">
-              <div class="flex items-center ms-3">
+            <div className="flex items-center content-center">
+              <div className="flex items-center ms-3">
                 <div className="flex mr-10 w-10 h-10" ref={buttonRef}>
                   <button
                     onClick={() =>
@@ -240,7 +259,7 @@ const PanelInquilino = ({ userId }) => {
                   </button>
                   {showNotificationsMenu && (
                     <div
-                      className="z-20 absolute top-10 left-1/2 -translate-x-1/2 w-[350px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700 max-h-[400px]"
+                      className="z-20 absolute top-20 left-1/2 -translate-x-1/2 w-[350px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700 max-h-[400px]"
                       ref={menuRef}
                     >
                       <div className="block px-4 py-2 font-medium text-center text-gray-700 rounded-t-lg bg-gray-50 dark:bg-gray-800 dark:text-white">
@@ -373,133 +392,147 @@ const PanelInquilino = ({ userId }) => {
       {/* Barra lateral */}
       <aside
         id="logo-sidebar"
-        className="fixed top-0 left-0 z-40 w-64 h-screen pt-20 transition-transform -translate-x-full bg-white border-r border-gray-200 sm:translate-x-0 dark:bg-gray-800 dark:border-gray-700" 
-        aria-label="Sidebar"
+        className={`fixed top-0 left-0 z-40 w-64 h-screen pt-18 transition-transform ${
+          isSidebarOpen ? "translate-x-0" : "-translate-x-full"
+        } sm:translate-x-0`}
       >
         <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
-          <div className="mb-6 text-center bg-gray-100 p-3">
-            {/* Mostrar mensaje de cobros pendientes */}
-            {hayPagosPendientes ? (
-              <div className="text-center">
-                <p className="text-red-600 font-semibold mb-2">
-                  Tienes {cantidadPagosPendientes}
-                  {cantidadPagosPendientes === 1 ? " pago" : " pagos"} pendiente
-                  {cantidadPagosPendientes === 1 ? "" : "s"}.
-                </p>
-              </div>
-            ) : (
-              <div className="text-center">
-                <p className="text-green-600 font-semibold mb-2">
-                  No tienes pagos pendientes.
-                </p>
-              </div>
-            )}
-
-            <p className="text-gray-600">
-              {usuario?.nombre || "Nombre no disponible"}
-            </p>
-          </div>
-
           <ul className="space-y-2 font-medium">
-            
-              <li>
-                <button
-                  onClick={() => setView("contrato")}
-                  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+            <li>
+              <div className="text-center p-3">
+                {/* Mostrar mensaje de cobros pendientes */}
+                {hayPagosPendientes ? (
+                  <div className="text-center">
+                    <p className="text-red-600 font-semibold mb-2">
+                      Tienes {cantidadPagosPendientes}
+                      {cantidadPagosPendientes === 1 ? " pago" : " pagos"}{" "}
+                      pendiente
+                      {cantidadPagosPendientes === 1 ? "" : "s"}.
+                    </p>
+                  </div>
+                ) : (
+                  <div className="text-center">
+                    <p className="text-green-600 font-semibold mb-2">
+                      No tienes pagos pendientes.
+                    </p>
+                  </div>
+                )}
+
+                <p className="dark:text-white font-bold font-big text-xl">
+                  {usuario?.nombre || "Nombre no disponible"}
+                </p>
+              </div>
+            </li>
+            <li>
+              <button
+                onClick={() => {
+                  setView("contrato");
+                  toggleSidebar(); // Cerrar el sidebar
+                }}
+                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+              >
+                <svg
+                  className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 22 21"
                 >
-                  <svg
-                    className="w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 22 21"
-                  >
-                    <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
-                    <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
-                  </svg>
-                  <span className="ms-3">Contrato</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setView("editarPerfil")}
-                  className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group w-full"
+                  <path d="M16.975 11H10V4.025a1 1 0 0 0-1.066-.998 8.5 8.5 0 1 0 9.039 9.039.999.999 0 0 0-1-1.066h.002Z" />
+                  <path d="M12.5 0c-.157 0-.311.01-.565.027A1 1 0 0 0 11 1.02V10h8.975a1 1 0 0 0 1-.935c.013-.188.028-.374.028-.565A8.51 8.51 0 0 0 12.5 0Z" />
+                </svg>
+                <span className="ms-3">Contrato</span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => {
+                  setView("editarPerfil");
+                  toggleSidebar(); // Cerrar el sidebar
+                }}
+                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+              >
+                <svg
+                  className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 18 18"
                 >
-                  <svg
-                    className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 18 18"
-                  >
-                    <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z" />
-                  </svg>
-                  <span className="ms-3">Editar Perfil</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setView("pagos")}
-                  className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group w-full"
+                  <path d="M6.143 0H1.857A1.857 1.857 0 0 0 0 1.857v4.286C0 7.169.831 8 1.857 8h4.286A1.857 1.857 0 0 0 8 6.143V1.857A1.857 1.857 0 0 0 6.143 0Zm10 0h-4.286A1.857 1.857 0 0 0 10 1.857v4.286C10 7.169 10.831 8 11.857 8h4.286A1.857 1.857 0 0 0 18 6.143V1.857A1.857 1.857 0 0 0 16.143 0Zm-10 10H1.857A1.857 1.857 0 0 0 0 11.857v4.286C0 17.169.831 18 1.857 18h4.286A1.857 1.857 0 0 0 8 16.143v-4.286A1.857 1.857 0 0 0 6.143 10Zm10 0h-4.286A1.857 1.857 0 0 0 10 11.857v4.286c0 1.026.831 1.857 1.857 1.857h4.286A1.857 1.857 0 0 0 18 16.143v-4.286A1.857 1.857 0 0 0 16.143 10Z" />
+                </svg>
+                <span className="ms-3">Editar Perfil</span>
+              </button>
+            </li>
+            <li>
+              <button
+                onClick={() => {
+                  setView("pagos");
+                  toggleSidebar(); // Cerrar el sidebar
+                }}
+                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+              >
+                <svg
+                  className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 20 18"
                 >
-                  <svg
-                    className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 20 18"
-                  >
-                    <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z" />
-                  </svg>
-                  <span className="ms-3">Pagos</span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={() => setView("notificaciones")}
-                  className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+                  <path d="M14 2a3.963 3.963 0 0 0-1.4.267 6.439 6.439 0 0 1-1.331 6.638A4 4 0 1 0 14 2Zm1 9h-1.264A6.957 6.957 0 0 1 15 15v2a2.97 2.97 0 0 1-.184 1H19a1 1 0 0 0 1-1v-1a5.006 5.006 0 0 0-5-5ZM6.5 9a4.5 4.5 0 1 0 0-9 4.5 4.5 0 0 0 0 9ZM8 10H5a5.006 5.006 0 0 0-5 5v2a1 1 0 0 0 1 1h11a1 1 0 0 0 1-1v-2a5.006 5.006 0 0 0-5-5Z" />
+                </svg>
+                <span className="ms-3">Pagos</span>
+              </button>
+            </li>
+            <li>
+              <a
+                onClick={() => {
+                  setView("notificaciones");
+                  toggleSidebar(); // Cerrar el sidebar
+                }}
+                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group"
+              >
+                <svg
+                  className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="currentColor"
+                  viewBox="0 0 20 20"
                 >
-                  <svg
-                    className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white" 
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="currentColor"
-                    viewBox="0 0 20 20"
-                  >
-                    <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z" />
-                  </svg>
-                  <span className="flex-1 ms-3 whitespace-nowrap">
-                    Notificaciones
-                  </span>
-                  <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
-                    3
-                  </span>
-                </button>
-              </li>
-              <li>
-                <button
-                  onClick={cerrarSesion}
-                  className="flex items-center p-2 text-gray-900 rounded-lg hover:bg-gray-100 group w-full"
+                  <path d="m17.418 3.623-.018-.008a6.713 6.713 0 0 0-2.4-.569V2h1a1 1 0 1 0 0-2h-2a1 1 0 0 0-1 1v2H9.89A6.977 6.977 0 0 1 12 8v5h-2V8A5 5 0 1 0 0 8v6a1 1 0 0 0 1 1h8v4a1 1 0 0 0 1 1h2a1 1 0 0 0 1-1v-4h6a1 1 0 0 0 1-1V8a5 5 0 0 0-2.582-4.377ZM6 12H4a1 1 0 0 1 0-2h2a1 1 0 0 1 0 2Z" />
+                </svg>
+                <span className="flex-1 ms-3 whitespace-nowrap">
+                  Notificaciones
+                </span>
+                <span className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
+                  3
+                </span>
+              </a>
+            </li>
+
+            <li>
+              <button
+                onClick={cerrarSesion}
+                className="flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full"
+              >
+                <svg
+                  className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 dark:text-gray-400 group-hover:text-gray-900 dark:group-hover:text-white"
+                  aria-hidden="true"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 18 16"
                 >
-                  <svg
-                    className="shrink-0 w-5 h-5 text-gray-500 transition duration-75 group-hover:text-gray-900"
-                    aria-hidden="true"
-                    xmlns="http://www.w3.org/2000/svg"
-                    fill="none"
-                    viewBox="0 0 18 16"
-                  >
-                    <path
-                      stroke="currentColor"
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth="2"
-                      d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
-                    />
-                  </svg>
-                  <span className="ms-3">Cerrar Sesión</span>
-                </button>
-              </li>
-            
+                  <path
+                    stroke="currentColor"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M1 8h11m0 0L8 4m4 4-4 4m4-11h3a2 2 0 0 1 2 2v10a2 2 0 0 1-2 2h-3"
+                  />
+                </svg>
+                <span className="ms-3">Cerrar Sesión</span>
+              </button>
+            </li>
           </ul>
         </div>
       </aside>
@@ -507,12 +540,10 @@ const PanelInquilino = ({ userId }) => {
       {/* Contenido principal */}
       <div className="p-4 sm:ml-64">
         <div className="p-4 border-2 border-gray-200 border-dashed rounded-lg dark:border-gray-300 mt-14">
-          
           {view === "contrato" && <Contrato userId={userId} />}
           {view === "editarPerfil" && <EditarPerfil userId={userId} />}
           {view === "pagos" && <Pagos userId={userId} />}
           {view === "notificaciones" && <Notificaciones userId={userId} />}
-                  
         </div>
       </div>
     </div>
