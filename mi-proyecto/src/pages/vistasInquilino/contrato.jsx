@@ -201,9 +201,9 @@ function Contrato({ userId }) {
                 <div>
                   <p>
                     {cobro.mesCorrespondiente === mesActual ? (
-                      <h2 className="font-bold">Mes Actual </h2>
+                      <p className="font-bold">Mes Actual </p>
                     ) : (
-                      <span></span>
+                      <span></span> 
                     )}
                     Mes: {cobro.mesCorrespondiente} - Año:{" "}
                     {cobro.añoCorrespondiente}

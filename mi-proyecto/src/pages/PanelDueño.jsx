@@ -35,7 +35,6 @@ const PanelDueño = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Nuevo estado para el sidebar
     const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Estado para controlar el menú desplegable
-    const dropdownRef = useRef(null); // Referencia al menú desplegable
 
     const toggleDropdown = () => {
         // Cierra el sidebar si está abierto al abrir el dropdown
@@ -225,7 +224,57 @@ const PanelDueño = () => {
         } else {
             alert("Por favor, completa todos los campos.");
         }
+        
     };
+
+    const asideRef = useRef(null);
+    const buttonProfileRef = useRef(null);
+    const profileDropdownRef = useRef(null);
+
+
+    useEffect(() => {
+        const handleClickOutside = (event) => {
+            if (
+                isSidebarOpen &&
+                asideRef.current &&
+                !asideRef.current.contains(event.target) &&
+                !event.target.closest('button[type="button"]')
+            ) {
+                setIsSidebarOpen(false);
+            }
+
+            // Para el menú de perfil
+            if (
+                isDropdownOpen &&
+                profileDropdownRef.current &&
+                !profileDropdownRef.current.contains(event.target) &&
+                !buttonProfileRef.current.contains(event.target)
+            ) {
+                setIsDropdownOpen(false);
+            }
+
+            if (isSidebarOpen || isDropdownOpen) {
+                document.addEventListener('mousedown', handleClickOutside);
+            }
+
+        };
+
+        if (isDropdownOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        if (isSidebarOpen) {
+            document.addEventListener('mousedown', handleClickOutside);
+        }
+
+        return () => {
+            document.removeEventListener('mousedown', handleClickOutside);
+        };
+    }, [isSidebarOpen, isDropdownOpen]);
+
+    
+
+    
 
     return (
         <div className="">
@@ -274,6 +323,7 @@ const PanelDueño = () => {
                                 
 
                                 <img
+                                    ref={buttonProfileRef}
                                     id="avatarButton"
                                     type="button"
                                     onClick={toggleDropdown} // Controla la visibilidad del menú
@@ -286,7 +336,7 @@ const PanelDueño = () => {
                                 {isDropdownOpen && (
                                     <div
                                         id="userDropdown"
-                                        ref={dropdownRef} // Asigna la referencia al menú desplegable
+                                        ref={profileDropdownRef} // Asigna la referencia al menú desplegable
                                         className="absolute right-0 top-12 z-50 bg-white border border-gray-200 rounded-lg shadow-lg w-64" // Cambié mt-2 a top-12 para posicionar correctamente
                                     >
                                         <div className="px-4 py-3 text-sm text-gray-900 font-medium">
@@ -361,6 +411,7 @@ const PanelDueño = () => {
 
             {/* Barra lateral */}
             <aside
+                ref={asideRef}
                 className={`fixed top-0 left-0 z-40 w-64 h-screen pt-18 transition-transform ${
                     isSidebarOpen ? "translate-x-0" : "-translate-x-full"
                 } md:translate-x-0`}>
@@ -401,7 +452,10 @@ const PanelDueño = () => {
                     <ul className="space-y-2 font-medium">
                         <li>
                             <button
-                                onClick={() => setVistaActiva("inquilinos")}
+                                onClick={() => {
+                                    setVistaActiva("inquilinos");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "inquilinos" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -411,7 +465,10 @@ const PanelDueño = () => {
                         </li>
                         <li>
                             <button
-                                onClick={() => setVistaActiva("apartamentos")}
+                                onClick={() => {
+                                    setVistaActiva("apartamentos");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "apartamentos" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -421,7 +478,10 @@ const PanelDueño = () => {
                         </li>
                         <li>
                             <button
-                                onClick={() => setVistaActiva("contratos")}
+                                onClick={() => {
+                                    setVistaActiva("contratos");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "contratos" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -431,7 +491,10 @@ const PanelDueño = () => {
                         </li>
                         <li>
                             <button
-                                onClick={() => setVistaActiva("estadoPagos")}
+                                onClick={() => {
+                                    setVistaActiva("estadoPagos");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "estadoPagos" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -442,7 +505,10 @@ const PanelDueño = () => {
                         </li>
                         <li>
                             <button
-                                onClick={() => setVistaActiva("ingresos")}
+                                onClick={() => {
+                                    setVistaActiva("ingresos");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "ingresos" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -453,7 +519,10 @@ const PanelDueño = () => {
                         </li>
                         <li>
                             <button
-                                onClick={() => setVistaActiva("historial")}
+                                onClick={() => {
+                                    setVistaActiva("historial");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "historial" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -464,7 +533,10 @@ const PanelDueño = () => {
                         </li>
                         <li>
                             <button
-                                onClick={() => setVistaActiva("pagosTotales")}
+                                onClick={() => {
+                                    setVistaActiva("pagosTotales");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "pagosTotales" ? "bg-blue-800" : ""
                                 } hover:bg-blue-200`}
@@ -476,7 +548,10 @@ const PanelDueño = () => {
 
                         <li>
                             <button
-                                onClick={() => setVistaActiva("notificacionesDueño")}
+                                onClick={() => {
+                                    setVistaActiva("notificacionesDueño");
+                                    toggleSidebar();
+                                }}
                                 className={`flex items-center p-2 text-gray-900 rounded-lg dark:text-white hover:bg-gray-100 dark:hover:bg-gray-700 group w-full ${
                                     vistaActiva === "notificacionesDueño"
                                         ? "bg-blue-200"
