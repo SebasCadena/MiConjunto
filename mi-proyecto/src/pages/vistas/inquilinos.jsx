@@ -164,7 +164,7 @@ const Inquilinos = ({
             </p>
 
             {/* Lista de inquilinos */}
-          <div className="bg-teal-50 shadow rounded p-2 sm:p-4">
+          <div className="bg-gray-100 shadow rounded p-2 sm:p-4">
             {inquilinosLista.map((inquilino) => (
                 <div
                     key={inquilino.id}

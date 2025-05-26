@@ -177,7 +177,7 @@ export default function Contratos() {
   };
 
   return (
-    <div className="p-2 max-w-lg mx-auto bg-cyan-100 rounded-lg">
+    <div className="p-2 mx-auto rounded-lg">
       <h2 className="text-center text-lg font-semibold mb-4">Añadir / Modificar Contrato</h2>
 
       {/* Selector de apartamentos */}      
@@ -285,8 +285,9 @@ export default function Contratos() {
               <li
                 key={contrato.id}
                 className="p-4 bg-gray-100 rounded shadow flex justify-between items-center"
+                // Make list item stack vertically on small screens
               >
-                <div>
+                <div className="flex-1 mb-4 sm:mb-0"> {/* Allow text content to take available space */}
                   <p className="font-bold">Apartamento: {contrato.codigo_apartamento}</p>
                   <p>Inquilino: {contrato.nombre_inquilino}</p>
                   <p>Frecuencia: {contrato.frecuencia}</p>
@@ -295,7 +296,8 @@ export default function Contratos() {
                   </p>                  
                   {/* Aquí podrías mostrar más detalles del contrato si es necesario */}
                 </div>
-                <div className="flex space-x-2">
+                {/* Stack buttons vertically on small screens */}
+                <div className="flex flex-col sm:flex-row space-y-2 sm:space-y-0 sm:space-x-2">
                   <button
                     onClick={() => finalizarContratoFunction(contrato.id)}
                     className="bg-red-500 text-white px-4 py-2 rounded"
