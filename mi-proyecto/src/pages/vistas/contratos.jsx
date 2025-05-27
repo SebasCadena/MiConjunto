@@ -1,6 +1,11 @@
 import React, { useEffect, useState } from "react";
 import { db } from "../firebaseConfig.js";
-import { generar_cobros, agregarCobros, getContratos, actualizarEstadoCobros } from "../../utils.jsx";
+import {
+  generar_cobros,
+  agregarCobros,
+  getContratos,
+  actualizarEstadoCobros,
+} from "../../utils.jsx";
 import {
   collection,
   getDocs,
@@ -11,9 +16,10 @@ import {
   Timestamp,
   query,
   where,
-  onSnapshot, 
+  onSnapshot,
   orderBy,
 } from "firebase/firestore";
+import ContratoGenerado from "../../components/GenerarContrato.jsx";
 
 export default function Contratos() {
   const [apartamentos, setApartamentos] = useState([]);
@@ -27,17 +33,20 @@ export default function Contratos() {
   const [frecuencia, setFrecuencia] = useState("mensual");
   const [fechaInicio, setFechaInicio] = useState("");
   const [mesesContrato, setMesesContrato] = useState("");
-  
 
   useEffect(() => {
-    const obtenerDatos = async () => {      
+    const obtenerDatos = async () => {
       const contratosData = await getContratos();
       setContratos(contratosData);
 
       try {
         // Obtener apartamentos
         const aptoSnapshot = await getDocs(
-          query(collection(db, "apartamentos"), where("ocupacion", "==", false), where("activo", "==", true))
+          query(
+            collection(db, "apartamentos"),
+            where("ocupacion", "==", false),
+            where("activo", "==", true)
+          )
         );
         const apartamentosData = aptoSnapshot.docs
           .map((doc) => ({
@@ -49,7 +58,9 @@ export default function Contratos() {
         setApartamentos(apartamentosData);
 
         // Obtener inquilinos
-        const inquilinoSnapshot = await getDocs(query(collection(db, "users"), where("activo", "==", true)));
+        const inquilinoSnapshot = await getDocs(
+          query(collection(db, "users"), where("activo", "==", true))
+        );
         const inquilinosData = inquilinoSnapshot.docs
           .map((doc) => ({
             id: doc.id,
@@ -59,13 +70,12 @@ export default function Contratos() {
         console.log("Inquilinos:", inquilinosData);
         setInquilinos(inquilinosData);
 
-       console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
+        console.log("Contratos activos:", contratosData); // Muestra solo los contratos activos
         setContratos(contratosData);
       } catch (error) {
         console.error("Error al obtener datos:", error);
       }
     };
-
 
     obtenerDatos();
 
@@ -74,15 +84,21 @@ export default function Contratos() {
     // Configurar listener en tiempo real para la colección 'cobros'
     const unsubscribe = onSnapshot(collection(db, "cobros"), () => {
       // Llamar a getContratos() para actualizar la lista de contratos
-      getContratos().then(contratosData => {
-        setContratos(contratosData);        
+      getContratos().then((contratosData) => {
+        setContratos(contratosData);
       });
     });
     return () => unsubscribe();
   }, []);
 
   const añadirContratoFunction = async () => {
-    if (!codigoApartamento || !idInquilino || !frecuencia || !fechaInicio || !mesesContrato) {
+    if (
+      !codigoApartamento ||
+      !idInquilino ||
+      !frecuencia ||
+      !fechaInicio ||
+      !mesesContrato
+    ) {
       alert("Por favor, completa todos los campos antes de guardar.");
       return;
     }
@@ -91,14 +107,15 @@ export default function Contratos() {
       alert("Por favor, ingrese una cantidad de meses válida.");
       return;
     }
-    
+
     try {
       const fechaInicioDate = new Date(fechaInicio);
       const fechaFinCalculada = new Date(fechaInicioDate);
-      fechaFinCalculada.setMonth(fechaInicioDate.getMonth() + Number(mesesContrato));
+      fechaFinCalculada.setMonth(
+        fechaInicioDate.getMonth() + Number(mesesContrato)
+      );
 
-
-      let contrato = {}
+      let contrato = {};
       let cobrosAGuardar = [];
 
       // Guardar contrato en Firestore
@@ -113,8 +130,8 @@ export default function Contratos() {
         fecha_fin: Timestamp.fromDate(fechaFinCalculada),
         activo: true,
       }).then((docRef) => {
-        // Accede al ID generado aquí        
-         contrato = {
+        // Accede al ID generado aquí
+        contrato = {
           id_contrato: docRef.id,
           codigo_apartamento: codigoApartamento,
           valor_apartamento: valorApartamento,
@@ -124,10 +141,9 @@ export default function Contratos() {
           fecha_inicio: Timestamp.fromDate(fechaInicioDate),
           fecha_fin: Timestamp.fromDate(fechaFinCalculada),
           activo: true,
-        }
+        };
         cobrosAGuardar = generar_cobros(contrato);
         agregarCobros(cobrosAGuardar);
-
       });
 
       // Actualizar estado del apartamento a ocupado
@@ -141,7 +157,7 @@ export default function Contratos() {
       setNombreInquilino("");
       setFrecuencia("mensual");
       setFechaInicio("");
-      setMesesContrato("");      
+      setMesesContrato("");
     } catch (error) {
       console.error("Error al guardar el contrato:", error);
       alert("Hubo un error al guardar el contrato.");
@@ -152,7 +168,7 @@ export default function Contratos() {
     try {
       // 1. Obtener el contrato para acceder al código del apartamento
       const contratoRef = doc(db, "contratos", idContrato);
-      const contratoSnap = await getDoc(contratoRef);      
+      const contratoSnap = await getDoc(contratoRef);
       const contratoData = contratoSnap.data();
       const codigoApartamento = contratoData.codigo_apartamento; // Cambio de nombre de variable
 
@@ -163,11 +179,9 @@ export default function Contratos() {
       const apartamentoRef = doc(db, "apartamentos", codigoApartamento);
       await updateDoc(apartamentoRef, { ocupacion: false });
 
-
       // Actualizar la lista de contratos
       const contratosData = await getContratos();
       setContratos(contratosData);
-      
 
       alert("Contrato finalizado exitosamente.");
     } catch (error) {
@@ -176,66 +190,69 @@ export default function Contratos() {
     }
   };
 
-const exportarContratosACSV = () => {
-        if (contratos.length === 0) {
-            alert('No hay contratos para exportar');
-            return;
-        }
+  const exportarContratosACSV = () => {
+    if (contratos.length === 0) {
+      alert("No hay contratos para exportar");
+      return;
+    }
 
-        // Definir las cabeceras del CSV
-        const cabeceras = [
-            'Código Apartamento',
-            'Nombre Inquilino',
-            'Valor Apartamento',
-            'Frecuencia',
-            'Fecha Inicio',
-            'Estado'
-        ];
+    // Definir las cabeceras del CSV
+    const cabeceras = [
+      "Código Apartamento",
+      "Nombre Inquilino",
+      "Valor Apartamento",
+      "Frecuencia",
+      "Fecha Inicio",
+      "Estado",
+    ];
 
-        // Convertir los datos a formato CSV
-        const filasDatos = contratos.map(contrato => {
-            return [
-                contrato.codigo_apartamento,
-                contrato.nombre_inquilino,
-                contrato.valor_apartamento,
-                contrato.frecuencia,
-                contrato.fecha_inicio.toDate().toLocaleDateString(),
-                contrato.activo ? 'Activo' : 'Inactivo'
-            ].join(',');
-        });
+    // Convertir los datos a formato CSV
+    const filasDatos = contratos.map((contrato) => {
+      return [
+        contrato.codigo_apartamento,
+        contrato.nombre_inquilino,
+        contrato.valor_apartamento,
+        contrato.frecuencia,
+        contrato.fecha_inicio.toDate().toLocaleDateString(),
+        contrato.activo ? "Activo" : "Inactivo",
+      ].join(",");
+    });
 
-        // Crear el contenido del CSV
-        const contenidoCSV = [
-            cabeceras.join(','),
-            ...filasDatos
-        ].join('\n');
+    // Crear el contenido del CSV
+    const contenidoCSV = [cabeceras.join(","), ...filasDatos].join("\n");
 
-        // Crear el blob y descargar el archivo
-        const blob = new Blob(['\ufeff' + contenidoCSV], { type: 'text/csv;charset=utf-8;' });
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `contratos_${new Date().toLocaleDateString()}.csv`;
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        window.URL.revokeObjectURL(url);
-    };
+    // Crear el blob y descargar el archivo
+    const blob = new Blob(["\ufeff" + contenidoCSV], {
+      type: "text/csv;charset=utf-8;",
+    });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement("a");
+    link.href = url;
+    link.download = `contratos_${new Date().toLocaleDateString()}.csv`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+  };
 
-
-    return (
+  return (
     <div className="p-2 mx-auto rounded-lg">
+      <h2 className="text-center text-lg font-semibold mb-4">
+        Añadir / Modificar Contrato
+      </h2>
 
-      <h2 className="text-center text-lg font-semibold mb-4">Añadir / Modificar Contrato</h2>
-
-      {/* Selector de apartamentos */}      
+      {/* Selector de apartamentos */}
       <div className="flex gap-2 mb-4">
-        <button className="bg-blue-400 text-white px-4 py-2 rounded w-1/3">Asignar Apto</button>
+        <button className="bg-blue-400 text-white px-4 py-2 rounded w-1/3">
+          Asignar Apto
+        </button>
         <select
           className="bg-white p-2 rounded w-2/3"
           value={codigoApartamento}
           onChange={(e) => {
-            const selected = apartamentos.find((apto) => apto.codigo === e.target.value);
+            const selected = apartamentos.find(
+              (apto) => apto.codigo === e.target.value
+            );
             setCodigoApartamento(e.target.value);
             setValorApartamento(selected?.valor || "");
           }}
@@ -263,7 +280,9 @@ const exportarContratosACSV = () => {
 
       {/* Selector de inquilinos */}
       <div className="flex gap-2 mb-4">
-        <button className="bg-blue-400 text-white px-4 py-2 rounded w-1/3">Inquilino</button>
+        <button className="bg-blue-400 text-white px-4 py-2 rounded w-1/3">
+          Inquilino
+        </button>
         <select
           className="bg-white p-2 rounded w-2/3"
           value={idInquilino}
@@ -295,10 +314,13 @@ const exportarContratosACSV = () => {
         </select>
       </div>
 
-       {/* Fechas y meses*/}
-       <div className="flex gap-2 mb-4 items-center">
+      {/* Fechas y meses*/}
+      <div className="flex gap-2 mb-4 items-center">
         <div className="w-1/2">
-          <label htmlFor="fechaInicio" className="block text-sm font-medium text-gray-700">
+          <label
+            htmlFor="fechaInicio"
+            className="block text-sm font-medium text-gray-700"
+          >
             Fecha Inicio
           </label>
           <input
@@ -310,29 +332,59 @@ const exportarContratosACSV = () => {
           />
         </div>
         <div className="w-1/2">
-          <label className="block text-sm font-medium text-gray-700">Meses Contrato</label>
-          <input type="number" className="mt-1 p-2 border border-gray-300 rounded w-full" value={mesesContrato} onChange={(e) => setMesesContrato(e.target.value)}/>
+          <label className="block text-sm font-medium text-gray-700">
+            Meses Contrato
+          </label>
+          <input
+            type="number"
+            className="mt-1 p-2 border border-gray-300 rounded w-full"
+            value={mesesContrato}
+            onChange={(e) => setMesesContrato(e.target.value)}
+          />
         </div>
       </div>
-
+{codigoApartamento &&
+        idInquilino &&
+        valorApartamento &&
+        fechaInicio &&
+        mesesContrato && (
+          <ContratoGenerado
+            contrato={{
+              nombre_inquilino: nombreInquilino,
+              codigo_apartamento: codigoApartamento,
+              valor_apartamento: valorApartamento,
+              frecuencia,
+              fecha_inicio: fechaInicio,
+              fecha_fin: (() => {
+                if (!fechaInicio || !mesesContrato) return "";
+                const inicio = new Date(fechaInicio);
+                inicio.setMonth(inicio.getMonth() + Number(mesesContrato));
+                return inicio.toISOString().split("T")[0];
+              })(),
+            }}
+          />
+        )}
       {/* Botón para guardar */}
       <div className="mt-6 text-center">
-        <button onClick={añadirContratoFunction} className="bg-green-500 text-white px-6 py-2 rounded">
+        <button
+          onClick={añadirContratoFunction}
+          className="bg-green-500 text-white px-6 py-2 rounded"
+        >
           Guardar Contrato
         </button>
-          <button
-              onClick={exportarContratosACSV}
-              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 mt-5 ml-5"
-          >
-              Exportar a CSV
-          </button>
+        <button
+          onClick={exportarContratosACSV}
+          className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 mt-5 ml-5"
+        >
+          Exportar a CSV
+        </button>
       </div>
-        
+      
 
-        {/* Lista de contratos */}
+      {/* Lista de contratos */}
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-4">Contratos Existentes</h3>
-        {contratos.filter(contrato => contrato.activo).length === 0 ? (
+        {contratos.filter((contrato) => contrato.activo).length === 0 ? (
           <p className="text-gray-600">No hay contratos registrados.</p>
         ) : (
           <ul className="space-y-4">
@@ -342,13 +394,18 @@ const exportarContratosACSV = () => {
                 className="p-4 bg-gray-100 rounded shadow flex justify-between items-center"
                 // Make list item stack vertically on small screens
               >
-                <div className="flex-1 mb-4 sm:mb-0"> {/* Allow text content to take available space */}
-                  <p className="font-bold">Apartamento: {contrato.codigo_apartamento}</p>
+                <div className="flex-1 mb-4 sm:mb-0">
+                  {" "}
+                  {/* Allow text content to take available space */}
+                  <p className="font-bold">
+                    Apartamento: {contrato.codigo_apartamento}
+                  </p>
                   <p>Inquilino: {contrato.nombre_inquilino}</p>
                   <p>Frecuencia: {contrato.frecuencia}</p>
                   <p>
-                    Fechas: {contrato.fecha_inicio.toDate().toLocaleDateString()} -{" "}
-                  </p>                  
+                    Fechas:{" "}
+                    {contrato.fecha_inicio.toDate().toLocaleDateString()} -{" "}
+                  </p>
                   {/* Aquí podrías mostrar más detalles del contrato si es necesario */}
                 </div>
                 {/* Stack buttons vertically on small screens */}
@@ -360,13 +417,13 @@ const exportarContratosACSV = () => {
                     Finalizar Contrato
                   </button>
                   {/* Otros botones o acciones aquí */}
-                    
                 </div>
               </li>
             ))}
           </ul>
         )}
       </div>
+      
     </div>
   );
 }
