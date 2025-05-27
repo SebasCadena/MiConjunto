@@ -158,48 +158,7 @@ const Inquilinos = ({
             </div>
           </header>
 
-
-          <p>
-                {mostrarInactivos ? "Mostrando inquilinos inactivos" : "Mostrando inquilinos activos"}
-            </p>
-
-            {/* Lista de inquilinos */}
-          <div className="bg-teal-50 shadow rounded p-2 sm:p-4">
-            {inquilinosLista.map((inquilino) => (
-                <div
-                    key={inquilino.id}
-                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b py-3 px-2 gap-3"
-                >
-                  <div className="w-full sm:w-auto">
-                    <p className="font-bold break-words">
-                      {inquilino.nombre}{' '}
-                      <span className="text-sm">
-                        ({inquilino.activo === true ? "Activo" : "Inactivo"})
-                    </span>
-                    </p>
-                    <p className="text-gray-600 text-sm break-words">{inquilino.email}</p>
-                  </div>
-                  <div className="flex flex-row gap-2 w-full sm:w-auto justify-start sm:justify-end">
-                    <button
-                        onClick={() => setEditandoInquilinoState(inquilino)}
-                        className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600 text-sm flex-1 sm:flex-none"
-                    >
-                      Editar
-                    </button>
-                    <button
-                        onClick={() =>
-                            eliminarInquilinoFunction(inquilino.id, inquilino.email)
-                        }
-                        className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 text-sm flex-1 sm:flex-none"
-                    >
-                      {mostrarInactivos ? "Reactivar" : "Eliminar"}
-                    </button>
-                  </div>
-                </div>
-            ))}
-          </div>
-
-            {/* Formulario para añadir o editar inquilino */}
+          {/* Formulario para añadir o editar inquilino */}
             {mostrarFormularioState || editandoInquilinoState ? (
                 <div className="mt-4 p-4 bg-white shadow rounded">
                     <h2 className="text-xl font-bold mb-4">
@@ -286,6 +245,49 @@ const Inquilinos = ({
                     </div>
                 </div>
             ) : null}
+
+
+          <p className="bg-gray-200 py-2 px-4 rounded-md shadow-sm text-center mb-2">
+                {mostrarInactivos ? "Mostrando inquilinos inactivos" : "Mostrando inquilinos activos"}
+            </p>
+
+            {/* Lista de inquilinos */}
+          <div className="bg-gray-100 shadow rounded p-2 sm:p-4">
+            {inquilinosLista.map((inquilino) => (
+                <div
+                    key={inquilino.id}
+                    className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b py-3 px-2 gap-3"
+                >
+                  <div className="w-full sm:w-auto">
+                    <p className="font-bold break-words">
+                      {inquilino.nombre}{' '}
+                      <span className="text-sm">
+                        ({inquilino.activo === true ? "Activo" : "Inactivo"})
+                    </span>
+                    </p>
+                    <p className="text-gray-600 text-sm break-words">{inquilino.email}</p>
+                  </div>
+                  <div className="flex flex-row gap-2 w-full sm:w-auto justify-start sm:justify-end">
+                    <button
+                        onClick={() => setEditandoInquilinoState(inquilino)}
+                        className="bg-blue-500 text-white py-1 px-2 rounded hover:bg-blue-600 text-sm flex-1 sm:flex-none"
+                    >
+                      Editar
+                    </button>
+                    <button
+                        onClick={() =>
+                            eliminarInquilinoFunction(inquilino.id, inquilino.email)
+                        }
+                        className="bg-red-500 text-white py-1 px-2 rounded hover:bg-red-600 text-sm flex-1 sm:flex-none"
+                    >
+                      {mostrarInactivos ? "Reactivar" : "Eliminar"}
+                    </button>
+                  </div>
+                </div>
+            ))}
+          </div>
+
+            
         </>
     );
 };

@@ -123,22 +123,84 @@ const Apartamentos = () => {
           Gestión de Apartamentos{" "}
           <span className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">({apartamentos.length} registrados)</span>
         </h1>
-        <button
-          onClick={toggleInactivos}
-          className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full sm:w-auto"
-        >
-          {mostrarInactivos ? "Mostrar Activos" : "Mostrar Inactivos"}
-        </button>
-        <button
-          onClick={() => {
-            setMostrarFormulario(true);
-            setEditandoApartamento(null); // Asegurarse de que no esté en modo edición
-          }}
-          className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 w-full sm:w-auto"
-        >
-          Añadir Apartamento
-        </button>
+        <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
+          <button
+            onClick={toggleInactivos}
+            className="bg-blue-500 text-white py-2 px-4 rounded hover:bg-blue-600 w-full sm:w-auto"
+          >
+            {mostrarInactivos ? "Mostrar Activos" : "Mostrar Inactivos"}
+          </button>
+          <button
+            onClick={() => {
+              setMostrarFormulario(true);
+              setEditandoApartamento(null); // Asegurarse de que no esté en modo edición
+            }}
+            className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600 w-full sm:w-auto"
+          >
+            Añadir Apartamento
+          </button>
+        </div>
       </header>
+
+      {/* Formulario para añadir o editar apartamento */}
+      {mostrarFormulario && (
+        <div className="mt-4 p-4 bg-white shadow rounded">
+          <h2 className="text-xl font-bold mb-4">
+            {editandoApartamento ? "Editar Apartamento" : "Añadir Apartamento"}
+          </h2>
+          <div className="flex flex-col space-y-4">
+            <input
+              type="text"
+              placeholder="Código del Apartamento"
+              value={nuevoApartamento.codigo}
+              onChange={(e) =>
+                setNuevoApartamento({ ...nuevoApartamento, codigo: e.target.value })
+              }
+              className="border p-2 rounded"
+            />
+            <input
+              type="text"
+              placeholder="Dirección del Apartamento"
+              value={nuevoApartamento.direccion}
+              onChange={(e) =>
+                setNuevoApartamento({ ...nuevoApartamento, direccion: e.target.value })
+              }
+              className="border p-2 rounded"
+            />
+            <textarea
+              placeholder="Descripción (opcional)"
+              value={nuevoApartamento.descripcion}
+              onChange={(e) =>
+                setNuevoApartamento({ ...nuevoApartamento, descripcion: e.target.value })
+              }
+              className="border p-2 rounded"
+            />
+            <input
+              type="number"
+              placeholder="Valor del Apartamento"
+              value={nuevoApartamento.valor}
+              onChange={(e) =>
+                setNuevoApartamento({ ...nuevoApartamento, valor: e.target.value })
+              }
+              className="border p-2 rounded"
+            />
+            <div className="flex justify-end space-x-4">
+              <button
+                onClick={() => setMostrarFormulario(false)}
+                className="bg-gray-300 py-2 px-4 rounded hover:bg-gray-400"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={añadirApartamento}
+                className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
+              >
+                {editandoApartamento ? "Guardar Cambios" : "Guardar"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <p className="bg-gray-200 py-2 px-4 rounded-md shadow-sm text-center">
         {mostrarInactivos
@@ -209,65 +271,7 @@ const Apartamentos = () => {
         )}
       </div>
 
-      {/* Formulario para añadir o editar apartamento */}
-      {mostrarFormulario && (
-        <div className="mt-4 p-4 bg-white shadow rounded">
-          <h2 className="text-xl font-bold mb-4">
-            {editandoApartamento ? "Editar Apartamento" : "Añadir Apartamento"}
-          </h2>
-          <div className="flex flex-col space-y-4">
-            <input
-              type="text"
-              placeholder="Código del Apartamento"
-              value={nuevoApartamento.codigo}
-              onChange={(e) =>
-                setNuevoApartamento({ ...nuevoApartamento, codigo: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
-            <input
-              type="text"
-              placeholder="Dirección del Apartamento"
-              value={nuevoApartamento.direccion}
-              onChange={(e) =>
-                setNuevoApartamento({ ...nuevoApartamento, direccion: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
-            <textarea
-              placeholder="Descripción (opcional)"
-              value={nuevoApartamento.descripcion}
-              onChange={(e) =>
-                setNuevoApartamento({ ...nuevoApartamento, descripcion: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
-            <input
-              type="number"
-              placeholder="Valor del Apartamento"
-              value={nuevoApartamento.valor}
-              onChange={(e) =>
-                setNuevoApartamento({ ...nuevoApartamento, valor: e.target.value })
-              }
-              className="border p-2 rounded"
-            />
-            <div className="flex justify-end space-x-4">
-              <button
-                onClick={() => setMostrarFormulario(false)}
-                className="bg-gray-300 py-2 px-4 rounded hover:bg-gray-400"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={añadirApartamento}
-                className="bg-green-500 text-white py-2 px-4 rounded hover:bg-green-600"
-              >
-                {editandoApartamento ? "Guardar Cambios" : "Guardar"}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
+      
     </div>
   );
 };
