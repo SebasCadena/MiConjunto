@@ -359,14 +359,16 @@ const PanelInquilino = ({userId}) => {
                                     <div
                                         id="userDropdown"
                                         ref={dropdownRef} // Asigna la referencia al menú desplegable
-                                        className="absolute right-0 top-12 z-50 bg-white border border-gray-200 rounded-lg shadow-lg w-64" // Cambié mt-2 a top-12 para posicionar correctamente
+                                        className="absolute right-0 top-20 z-50 bg-white border border-gray-200 rounded-lg shadow-lg w-64" // Cambié mt-2 a top-12 para posicionar correctamente
                                     >
                                         <div className="px-4 py-3 text-sm text-gray-900 font-medium">
-                                            <div>Maria Jose Ramirez Cardona</div>
+                                            <div>
+                                            {usuario ? usuario.nombre : "Cargando..."}
+                                            </div>
                                             {" "}
                                             {/* Nombre completo */}
-                                            <div className="text-gray-500 break-words">
-                                                maria.ramirez11@uceva.edu.co
+                                            <div className="mt-2 text-gray-500 break-words">
+                                            {usuario ? usuario.email : "Cargando..."}
                                             </div>
                                             {" "}
                                             {/* Correo en una línea separada */}
@@ -441,7 +443,7 @@ const PanelInquilino = ({userId}) => {
                 <div className="h-full px-3 pb-4 overflow-y-auto bg-white dark:bg-gray-800">
                     <ul className="space-y-2 font-medium">
                         <li>
-                            <div className="text-center p-3">
+                            <div className="text-center p-3 mt-5 mb-10">
                                 {/* Mostrar mensaje de cobros pendientes */}
                                 {hayPagosPendientes ? (
                                     <div className="text-center">

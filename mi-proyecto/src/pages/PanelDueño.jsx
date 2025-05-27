@@ -22,8 +22,8 @@ import EstadoPagos from "./vistas/estadoPagos";
 import Ingresos from "./vistas/ingresos";
 import Historial from "./vistas/historial";
 import PagosTotales from "./vistas/pagosTotales";
-
-const PanelDueño = () => {
+import { getDoc } from "firebase/firestore"; // Import getDoc here
+const PanelDueño = ({ userId }) => {
     const [inquilinos, setInquilinos] = useState([]);
     const [nuevoInquilino, setNuevoInquilino] = useState({
         nombre: "",
@@ -35,6 +35,9 @@ const PanelDueño = () => {
 
     const [isSidebarOpen, setIsSidebarOpen] = useState(false); // Nuevo estado para el sidebar
     const [isDropdownOpen, setIsDropdownOpen] = useState(false); // Estado para controlar el menú desplegable
+
+    const [usuario, setUsuario] = useState(null); // Estado para los datos del usuario actual
+    const [loading, setLoading] = useState(true); // Estado de carga para los datos del usuario
 
     const toggleDropdown = () => {
         // Cierra el sidebar si está abierto al abrir el dropdown
@@ -272,8 +275,30 @@ const PanelDueño = () => {
         };
     }, [isSidebarOpen, isDropdownOpen]);
 
+    useEffect(() => {
+        const cargarDatosUsuario = async () => {
+            setLoading(true);
+            try {
+                // ... otras lógicas ...
+                const usuarioSnap = await getDoc(doc(db, "users", userId));
     
-
+                if (usuarioSnap.exists()) {
+                    setUsuario(usuarioSnap.data());
+                } else {
+                    console.error("No se encontro el documento del usuario.");
+                }
+                // ... otras lógicas ...
+            } catch (error) {
+                console.error("Error al cargar los datos del usuario:", error);
+            } finally {
+                setLoading(false);
+            }
+        };
+        if (userId) {
+            cargarDatosUsuario();
+        }
+    }, [userId]);
+    
     
 
     return (
@@ -340,11 +365,13 @@ const PanelDueño = () => {
                                         className="absolute right-0 top-12 z-50 bg-white border border-gray-200 rounded-lg shadow-lg w-64" // Cambié mt-2 a top-12 para posicionar correctamente
                                     >
                                         <div className="px-4 py-3 text-sm text-gray-900 font-medium">
-                                            <div>Maria Jose Ramirez Cardona</div>
+                                            <div>
+                                            {usuario ? usuario.nombre : "Cargando..."}
+                                            </div>
                                             {" "}
                                             {/* Nombre completo */}
                                             <div className="text-gray-500 break-words">
-                                                maria.ramirez11@uceva.edu.co
+                                            {usuario ? usuario.email : "Cargando..."}
                                             </div>
                                             {" "}
                                             {/* Correo en una línea separada */}
@@ -411,7 +438,7 @@ const PanelDueño = () => {
 
             {/* Barra lateral */}
             <aside
-                ref={asideRef}
+                 ref={asideRef}
                 className={`fixed top-0 left-0 z-40 w-64 h-screen pt-18 transition-transform ${
                     isSidebarOpen ? "translate-x-0" : "-translate-x-full"
                 } md:translate-x-0`}>
@@ -426,7 +453,9 @@ const PanelDueño = () => {
 
 
                     <div className="mb-6 mt-10 text-center">
-                        <p className="font-bold dark:text-white">Juan Sebastian Cadena Varela</p>
+                        <p className="font-bold dark:text-white">
+                        {usuario ? usuario.nombre : "Cargando..."}
+                        </p>
                         <p className="text-gray-600 dark:text-white">Dueño</p>
                     </div>
 
