@@ -203,10 +203,151 @@ const Ingresos = () => {
     fetchCobros();
   }, [selectedYear]);
 
+  const exportarDatosParaPowerBI = async () => {
+    try {
+      const pagosSnapshot = await getDocs(collection(db, "pagos"));
+      const cobrosSnapshot = await getDocs(collection(db, "cobros"));
+      const apartamentosSnapshot = await getDocs(collection(db, "apartamentos"));
+
+      // Procesar los datos base
+      const pagos = pagosSnapshot.docs.map(doc => {
+        const data = doc.data();
+        const fecha = new Date(data.fecha_pago.seconds * 1000);
+        return {
+          id_pago: doc.id,
+          fecha_pago: fecha.toISOString().split('T')[0],
+          monto: data.montoPagado || 0,
+          metodo_pago: data.metodoPago || 'Desconocido',
+          año: fecha.getFullYear(),
+          mes: fecha.getMonth() + 1,
+          nombre_mes: fecha.toLocaleString('es-ES', { month: 'long' }),
+          id_cobro: data.id_cobro || ''
+        };
+      });
+
+      const cobros = cobrosSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          id_cobro: doc.id,
+          mes_correspondiente: data.mesCorrespondiente,
+          año_correspondiente: data.añoCorrespondiente,
+          valor_cobro: data.valor_cobro || 0,
+          estado: data.estado || 'Pendiente',
+          tiene_pago: data.id_pago ? 'Sí' : 'No',
+          codigo_apartamento: data.codigo_apartamento
+        };
+      });
+
+      const apartamentos = apartamentosSnapshot.docs.map(doc => {
+        const data = doc.data();
+        return {
+          codigo: data.codigo,
+          estado: data.ocupacion ? 'Ocupado' : 'No Ocupado'
+        };
+      });
+
+      // Combinar los datos en un solo array
+      const datosPowerBI = pagos.map(pago => {
+        const cobroRelacionado = cobros.find(c => c.id_cobro === pago.id_cobro) || {};
+        return {
+          // Campos para análisis temporal
+          fecha: pago.fecha_pago,
+          año: pago.año,
+          mes: pago.mes,
+          nombre_mes: pago.nombre_mes,
+
+          // Campos para análisis de pagos
+          monto: pago.monto,
+          metodo_pago: pago.metodo_pago,
+
+          // Campos para análisis de cobros
+          estado_cobro: cobroRelacionado.estado || 'Sin Cobro',
+          valor_cobro: cobroRelacionado.valor_cobro || 0,
+
+          // Campos para seguimiento
+          id_pago: pago.id_pago,
+          id_cobro: pago.id_cobro,
+          codigo_apartamento: cobroRelacionado.codigo_apartamento || ''
+        };
+      });
+
+      // Agregar cobros sin pagos
+      cobros.forEach(cobro => {
+        if (!pagos.some(p => p.id_cobro === cobro.id_cobro)) {
+          datosPowerBI.push({
+            fecha: '',
+            año: cobro.año_correspondiente,
+            mes: cobro.mes_correspondiente,
+            nombre_mes: new Date(2000, cobro.mes_correspondiente - 1).toLocaleString('es-ES', { month: 'long' }),
+            monto: 0,
+            metodo_pago: 'Sin Pago',
+            estado_cobro: cobro.estado,
+            valor_cobro: cobro.valor_cobro,
+            id_pago: '',
+            id_cobro: cobro.id_cobro,
+            codigo_apartamento: cobro.codigo_apartamento
+          });
+        }
+      });
+
+      // Agregar datos de ocupación de apartamentos
+      apartamentos.forEach(apt => {
+        if (!datosPowerBI.some(d => d.codigo_apartamento === apt.codigo)) {
+          datosPowerBI.push({
+            fecha: '',
+            año: new Date().getFullYear(),
+            mes: new Date().getMonth() + 1,
+            nombre_mes: '',
+            monto: 0,
+            metodo_pago: 'N/A',
+            estado_cobro: 'N/A',
+            valor_cobro: 0,
+            id_pago: '',
+            id_cobro: '',
+            codigo_apartamento: apt.codigo,
+            estado_apartamento: apt.estado
+          });
+        }
+      });
+
+      // Exportar a CSV
+      const cabeceras = Object.keys(datosPowerBI[0]).join(',');
+      const filas = datosPowerBI.map(item =>
+          Object.values(item).map(val =>
+              val === null || val === undefined ? '' :
+                  typeof val === 'string' ? `"${val.replace(/"/g, '""')}"` : val
+          ).join(',')
+      );
+
+      const contenidoCSV = [cabeceras, ...filas].join('\n');
+      const blob = new Blob(['\ufeff' + contenidoCSV], { type: 'text/csv;charset=utf-8;' });
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `datos_powerbi_${new Date().toISOString().split('T')[0]}.csv`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+    } catch (error) {
+      console.error("Error al exportar los datos:", error);
+      alert("Error al exportar los datos");
+    }
+  };  
+
   return (
     <div className="p-4 bg-white rounded-lg shadow-md">
       <h1 className="text-xl font-bold text-gray-800 mb-3">Resumen de Ingresos</h1>
       <p className="text-gray-600 mb-4 text-sm">Consulta los ingresos generados por año y mes.</p>
+
+      <button
+          onClick={exportarDatosParaPowerBI}
+          className="bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+      >
+        Exportar Datos para Power BI
+      </button>
+
 
       <div className="mb-4">
         <label htmlFor="year-select" className="block text-gray-700 font-medium mb-1 text-sm">
