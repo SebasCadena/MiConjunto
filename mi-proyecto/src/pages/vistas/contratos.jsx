@@ -176,8 +176,56 @@ export default function Contratos() {
     }
   };
 
-  return (
-    <div className="p-2 mx-auto rounded-lg">
+const exportarContratosACSV = () => {
+        if (contratos.length === 0) {
+            alert('No hay contratos para exportar');
+            return;
+        }
+
+        // Definir las cabeceras del CSV
+        const cabeceras = [
+            'Código Apartamento',
+            'Nombre Inquilino',
+            'Valor Apartamento',
+            'Frecuencia',
+            'Fecha Inicio',
+            'Estado'
+        ];
+
+        // Convertir los datos a formato CSV
+        const filasDatos = contratos.map(contrato => {
+            return [
+                contrato.codigo_apartamento,
+                contrato.nombre_inquilino,
+                contrato.valor_apartamento,
+                contrato.frecuencia,
+                contrato.fecha_inicio.toDate().toLocaleDateString(),
+                contrato.activo ? 'Activo' : 'Inactivo'
+            ].join(',');
+        });
+
+        // Crear el contenido del CSV
+        const contenidoCSV = [
+            cabeceras.join(','),
+            ...filasDatos
+        ].join('\n');
+
+        // Crear el blob y descargar el archivo
+        const blob = new Blob(['\ufeff' + contenidoCSV], { type: 'text/csv;charset=utf-8;' });
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `contratos_${new Date().toLocaleDateString()}.csv`;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        window.URL.revokeObjectURL(url);
+    };
+
+
+    return (
+    <div className="p-2 max-w-lg mx-auto bg-cyan-100 rounded-lg">
+
       <h2 className="text-center text-lg font-semibold mb-4">Añadir / Modificar Contrato</h2>
 
       {/* Selector de apartamentos */}      
@@ -272,9 +320,16 @@ export default function Contratos() {
         <button onClick={añadirContratoFunction} className="bg-green-500 text-white px-6 py-2 rounded">
           Guardar Contrato
         </button>
+          <button
+              onClick={exportarContratosACSV}
+              className="bg-blue-500 text-white px-6 py-2 rounded hover:bg-blue-600 mt-5 ml-5"
+          >
+              Exportar a CSV
+          </button>
       </div>
+        
 
-      {/* Lista de contratos */}
+        {/* Lista de contratos */}
       <div className="mt-8">
         <h3 className="text-lg font-semibold mb-4">Contratos Existentes</h3>
         {contratos.filter(contrato => contrato.activo).length === 0 ? (
