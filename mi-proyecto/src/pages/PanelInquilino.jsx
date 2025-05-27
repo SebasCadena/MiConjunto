@@ -15,7 +15,7 @@ import Contrato from "./vistasInquilino/contrato"; // Importamos el componente C
 import EditarPerfil from "./vistasInquilino/editarPerfil"; // Importamos el componente EditarPerfil
 import Pagos from "./vistasInquilino/pagos";
 import Notificaciones from "./vistasInquilino/notificaciones";
-import {useNavigate} from "react-router-dom"; // Importar useNavigate
+import {useNavigate} from "react-router-dom"; // Importar useNavigate4
 
 const PanelInquilino = ({userId}) => {
     const getIconForCategory = (category) => {
@@ -213,9 +213,25 @@ const PanelInquilino = ({userId}) => {
         }
     };
 
+    const [isVisible, setIsVisible] = useState(true);
+
+    useEffect(() => {
+        if (notificacionesNoLeidas.length > 0) {
+            // El banner será visible por 5 segundos (5000 ms)
+            const timer = setTimeout(() => {
+                setIsVisible(false);
+            }, 10000);
+
+            // Limpieza del timeout cuando el componente se desmonte
+            return () => clearTimeout(timer);
+        }
+    }, [notificacionesNoLeidas.length]);
+
     if (loading) {
         return <p>Cargando información del usuario...</p>;
     }
+
+    
 
     return (
         <div>
@@ -223,6 +239,37 @@ const PanelInquilino = ({userId}) => {
                 className="fixed top-0 z-50 w-full bg-white border-b border-gray-200 dark:bg-gray-800 dark:border-gray-700">
                 <div className="px-3 py-3 lg:px-5 lg:pl-3">
                     <div className="flex items-center justify-between">
+
+                        {notificacionesNoLeidas.length > 0 && (
+                            <div
+                                className={`fixed top-20 right-5 transform z-50 transition-all  
+        ${isVisible ? 'opacity-100 scale-100' : 'opacity-0 scale-95 pointer-events-none'}`}
+                            >
+                                <div className="flex items-center gap-3 bg-gradient-to-r from-gray-800 to-blue-600 p-5 rounded-xl shadow-2xl border-2 border-blue-200 animate-pulse">
+                                    <div className="flex-shrink-0 animate-bounce">
+                                        <svg
+                                            className="w-6 h-6 text-white"
+                                            fill="currentColor"
+                                            viewBox="0 0 20 20"
+                                        >
+                                            <path d="M10 2a6 6 0 00-6 6v3.586l-.707.707A1 1 0 004 14h12a1 1 0 00.707-1.707L16 11.586V8a6 6 0 00-6-6zM10 18a3 3 0 01-3-3h6a3 3 0 01-3 3z" />
+                                        </svg>
+                                    </div>
+                                    <div className="flex-1">
+                                        <p className="text-base font-bold text-white drop-shadow-lg">
+                                            ¡Tienes {notificacionesNoLeidas.length} notificación{notificacionesNoLeidas.length !== 1 ? 'es' : ''} sin leer!
+                                        </p>
+                                    </div>
+                                    <button
+                                        onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
+                                        className="px-4 py-2 bg-white text-blue-600 font-bold rounded-lg hover:bg-blue-50 transform hover:scale-105 transition-all duration-300 shadow-lg"
+                                    >
+                                        Ver ahora
+                                    </button>
+                                </div>
+                            </div>
+                        )}
+
                         <div className="flex items-center justify-start rtl:justify-end">
                             <button
                                 onClick={toggleSidebar} // Llama a la función para alternar el sidebar
@@ -261,30 +308,27 @@ const PanelInquilino = ({userId}) => {
                             <div className="flex items-center ms-3">
                                 <div className="flex mr-5 w-10 h-10" ref={buttonRef}>
                                     <button
-                                        onClick={() =>
-                                            setShowNotificationsMenu(!showNotificationsMenu)
-                                        }
-                                        className="rounded-full p-2 relative cursor-pointer"
+                                        onClick={() => setShowNotificationsMenu(!showNotificationsMenu)}
+                                        className="rounded-full p-2.5 relative cursor-pointer hover:bg-gray-700/30 transition-all duration-300 ease-in-out"
                                     >
                                         <svg
-                                            className="w-5 h-5 text-white"
+                                            className="w-6 h-6 text-white hover:text-gray-200 transition-colors duration-300"
                                             aria-hidden="true"
                                             xmlns="http://www.w3.org/2000/svg"
                                             fill="currentColor"
                                             viewBox="0 0 14 20"
                                         >
-                                            <path
-                                                d="M12.133 10.632v-1.8A5.406 5.406 0 0 0 7.979 3.57.946.946 0 0 0 8 3.464V1.1a1 1 0 0 0-2 0v2.364a.946.946 0 0 0 .021.106 5.406 5.406 0 0 0-4.154 5.262v1.8C1.867 13.018 0 13.614 0 14.807 0 15.4 0 16 .538 16h12.924C14 16 14 15.4 14 14.807c0-1.193-1.867-1.789-1.867-4.175ZM3.823 17a3.453 3.453 0 0 0 6.354 0H3.823Z"/>
+                                            <path d="M12.133 10.632v-1.8A5.406 5.406 0 0 0 7.979 3.57.946.946 0 0 0 8 3.464V1.1a1 1 0 0 0-2 0v2.364a.946.946 0 0 0 .021.106 5.406 5.406 0 0 0-4.154 5.262v1.8C1.867 13.018 0 13.614 0 14.807 0 15.4 0 16 .538 16h12.924C14 16 14 15.4 14 14.807c0-1.193-1.867-1.789-1.867-4.175ZM3.823 17a3.453 3.453 0 0 0 6.354 0H3.823Z"/>
                                         </svg>
                                         {notificacionesNoLeidas.length > 0 && (
-                                            <div
-                                                className="absolute block w-3 h-3 border-2 border-white rounded-full -top-0.5 start-2.5 dark:border-gray-900">
-                        <span className="absolute -top-1 start-1 text-[10px] text-white">
-                          {notificacionesNoLeidas.length}
-                        </span>
+                                            <div className="absolute -top-1 right-0 flex items-center justify-center min-w-[20px] h-5 px-1.5 bg-red-500 border-2 border-gray-800 rounded-full">
+            <span className="text-xs font-medium text-white">
+                {notificacionesNoLeidas.length}
+            </span>
                                             </div>
                                         )}
                                     </button>
+
                                     {showNotificationsMenu && (
                                         <div
                                             className="z-20 absolute top-20 left-1/2 -translate-x-1/2 w-[350px] bg-white divide-y divide-gray-100 rounded-lg shadow-sm dark:bg-gray-800 dark:divide-gray-700 max-h-[400px]"
@@ -555,7 +599,7 @@ const PanelInquilino = ({userId}) => {
                 </span>
                                 <span
                                     className="inline-flex items-center justify-center w-3 h-3 p-3 ms-3 text-sm font-medium text-blue-800 bg-blue-100 rounded-full dark:bg-blue-900 dark:text-blue-300">
-                  3
+                  {notificacionesNoLeidas.length}
                 </span>
                             </a>
                         </li>

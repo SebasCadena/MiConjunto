@@ -224,7 +224,7 @@ const exportarContratosACSV = () => {
 
 
     return (
-    <div className="p-2 max-w-lg mx-auto bg-cyan-100 rounded-lg">
+    <div className="p-2 mx-auto rounded-lg">
 
       <h2 className="text-center text-lg font-semibold mb-4">Añadir / Modificar Contrato</h2>
 
