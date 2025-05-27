@@ -59,67 +59,104 @@ function Pagos({ userId }) {
   });
 
   const generatePDF = () => {
-    // Espaciado superior
-    let y = 20;
+  const doc = new jsPDF({
+    orientation: "landscape",
+  });
 
-    // Título de la lista de pagos
-    doc.setFontSize(18);
-    doc.text("Villa Campestre", 10, y); // Título principal
-    doc.setFontSize(12);
-    y = y + 10;
-    doc.text("Lista de Pagos", 10, y); // Subtítulo
+  let y = 20;
+  doc.setFontSize(18);
+  doc.text("Villa Campestre", 10, y);
+  doc.setFontSize(12);
+  y += 10;
+  doc.text("Lista de Pagos", 10, y);
+  y += 15;
 
-    y = y + 15; // Espaciado después del título
+  const startX = 10;
+  const lineHeight = 10;
+  const columnWidths = [35, 70, 40, 30, 40, 40];
 
-    const startX = 10; // Posición horizontal inicial
-    const lineHeight = 10; // Espacio entre líneas
-    const columnWidths = [35, 70, 40, 30, 40, 20]; // Anchos de columna ajustados
-
-    // Encabezados de la tabla
-    const headers = [
-      "Fecha",
-      "Inquilino",
-      "Apartamento",
-      "Valor",
-      "Factura",
-      "Estado",
-    ];
-    doc.setFontSize(12);
-    doc.setFillColor(200, 220, 255); // Color de fondo azul claro para los encabezados
-    doc.rect(
-      startX,
-      y,
-      columnWidths.reduce((a, b) => a + b, 0),
-      lineHeight,
-      "F"
-    ); // Rectángulo de fondo
-    doc.setTextColor(255, 255, 255); // Texto blanco para los encabezados
-    let currentX = startX;
-    headers.forEach((header, index) => {
-      doc.text(header, currentX + columnWidths[index] / 2, y + lineHeight / 2, {
-        align: "center",
-      });
-      currentX += columnWidths[index];
+  // Encabezados
+  const headers = [
+    "Fecha",
+    "Inquilino",
+    "Apartamento",
+    "Valor",
+    "Factura",
+    "Metodo de pago",
+  ];
+  doc.setFontSize(12);
+  doc.setFillColor(200, 220, 255);
+  doc.rect(
+    startX,
+    y,
+    columnWidths.reduce((a, b) => a + b, 0),
+    lineHeight,
+    "F"
+  );
+  doc.setTextColor(255, 255, 255);
+  let currentX = startX;
+  headers.forEach((header, index) => {
+    doc.text(header, currentX + columnWidths[index] / 2, y + lineHeight / 2, {
+      align: "center",
+      baseline: "middle",
     });
-    doc.setTextColor(0, 0, 0); // Volver a negro
-    doc.line(startX, y + lineHeight, currentX, y + lineHeight); // Línea horizontal después de los encabezados
-    y = y + lineHeight;
+    currentX += columnWidths[index];
+  });
+  doc.setTextColor(0, 0, 0);
+  doc.line(startX, y + lineHeight, currentX, y + lineHeight);
+  y += lineHeight;
 
-    // Datos de los pagos
-    doc.setFontSize(10);
-
-    // Espaciado inferior antes de guardar
-    //Borde alrededor de la tabla
-    doc.rect(
-      startX,
-      y - pagos.length * lineHeight,
-      columnWidths.reduce((a, b) => a + b, 0),
-      pagos.length * lineHeight
+  // Aquí agregas los datos de los pagos
+  doc.setFontSize(10);
+  pagos.forEach((pago) => {
+    let colX = startX;
+    const contrato = contratos.find((c) => c.id === pago.contratoId) || {};
+    doc.text(
+      pago.fecha_pago.toDate().toLocaleDateString(),
+      colX + columnWidths[0] / 2,
+      y + lineHeight / 2,
+      { align: "center", baseline: "middle" }
     );
+    colX += columnWidths[0];
+    doc.text(
+      contrato.nombre_inquilino || "",
+      colX + columnWidths[1] / 2,
+      y + lineHeight / 2,
+      { align: "center", baseline: "middle" }
+    );
+    colX += columnWidths[1];
+    doc.text(
+      contrato.codigo_apartamento || "",
+      colX + columnWidths[2] / 2,
+      y + lineHeight / 2,
+      { align: "center", baseline: "middle" }
+    );
+    colX += columnWidths[2];
+    doc.text(
+      `$${pago.valor_pagado}`,
+      colX + columnWidths[3] / 2,
+      y + lineHeight / 2,
+      { align: "center", baseline: "middle" }
+    );
+    colX += columnWidths[3];
+    doc.text(
+      pago.num_factura || "",
+      colX + columnWidths[4] / 2,
+      y + lineHeight / 2,
+      { align: "center", baseline: "middle" }
+    );
+    colX += columnWidths[4];
+    doc.text(
+      pago.metodo_pago || "",
+      colX + columnWidths[5] / 2,
+      y + lineHeight / 2,
+      { align: "center", baseline: "middle" }
+    );
+    y += lineHeight;
+  });
 
-    y = y + 20;
-    doc.save(`lista_de_pagos.pdf`);
-  };
+  doc.save(`lista_de_pagos.pdf`);
+};
 
   return (
     <div className="p-6">
